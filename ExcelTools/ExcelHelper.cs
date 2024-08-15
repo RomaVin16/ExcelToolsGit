@@ -35,7 +35,7 @@ namespace ExcelTools
             }
             catch (Exception)
             {
-                throw new Exception("Переданный файл имеет некорректное расширение.");
+                throw new Exception("Переданный файл не найден либо имеет некорректное расширение.");
             }
 
             return wordbook;
