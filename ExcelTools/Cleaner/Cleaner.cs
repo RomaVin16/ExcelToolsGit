@@ -1,13 +1,12 @@
 ﻿using ClosedXML.Excel;
 using ExcelTools.Abstraction;
-using ExcelTools.Helpers;
 
 namespace ExcelTools.Cleaner
 {
     public class Cleaner: ExcelHandlerBase
     {
-CleanOptions cleanOptions = new CleanOptions();
-CleanResult cleanResult = new CleanResult();
+        private readonly CleanOptions cleanOptions;
+        private readonly CleanResult cleanResult;
 
 public Cleaner(CleanOptions cleanOptions, CleanResult cleanResult)
         {
@@ -22,7 +21,7 @@ public Cleaner(CleanOptions cleanOptions, CleanResult cleanResult)
         /// <param name="result"></param>
         public void DeleteEmptyRowsInSheet(IXLWorksheet item, CleanResult result)
         {
-            ExcelHelper.CheckingTheFileForEmptiness(item, result);
+            if (item.IsEmpty()) return;
 
             for (var i = item.LastRowUsed().RowNumber(); i >= 1; i--)
             {

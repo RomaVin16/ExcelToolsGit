@@ -7,7 +7,6 @@ namespace ExcelToolsApp
     {
         static void Main()
         {
-
             var cleanOptions = new CleanOptions { FilePath = "test.xlsx", ResultFilePath = "newTestEmptyFile.xlsx" };
             var cleanResult = new CleanResult();
 
