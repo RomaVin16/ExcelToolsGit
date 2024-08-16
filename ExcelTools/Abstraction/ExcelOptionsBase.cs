@@ -1,9 +1,8 @@
-﻿namespace ExcelTools
+﻿namespace ExcelTools.Abstraction
 {
-    public class CleanOptions
+    public class ExcelOptionsBase
     {
         public string FilePath { get; set; }
         public string ResultFilePath { get; set; }
-        public bool CleanWhiteSpaceRows { get; set; }
     }
 }

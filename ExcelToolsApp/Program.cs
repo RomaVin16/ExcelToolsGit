@@ -1,4 +1,5 @@
-﻿using ExcelTools;
+﻿using ExcelTools.App;
+using ExcelTools.Cleaner;
 
 namespace ExcelToolsApp
 {
@@ -6,27 +7,14 @@ namespace ExcelToolsApp
     {
         static void Main()
         {
-            var cleaner = new Cleaner();
 
-            var cleanerOptions = new CleanOptions();
+            var cleanOptions = new CleanOptions { FilePath = "test.xlsx", ResultFilePath = "newTestEmptyFile.xlsx" };
+            var cleanResult = new CleanResult();
 
-            cleanerOptions.FilePath = "test";
-            cleanerOptions.ResultFilePath = "newTestEmptyFile";
-            cleanerOptions.CleanWhiteSpaceRows = false;
+            var cleaner = new Cleaner(cleanOptions, cleanResult);
 
-            CleanResult result = new CleanResult();
-
-            try
-            {
-                result = cleaner.DeleteEmptyStringInWorkbook(cleanerOptions);
-            }
-            catch (Exception ex)
-            {
-                result.Code = (CleanResult.ResultCode)1;
-                result.ErrorMessage = ex.Message;
-            }
-
-            ExcelHelper.PrintProgramOperationStatistics(result);
+            cleaner.Process();
+            Helper.PrintProgramOperationStatistics(cleanResult);
         }
     }
 }
