@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35027.167
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExcelTools", "ExcelTools\ExcelTools.csproj", "{3507A49F-5D3D-480F-B089-CF21A77A85D1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExcelToolsApp", "ExcelToolsApp\ExcelToolsApp.csproj", "{DB90FE7E-2E48-40FB-BF10-45B180966FEC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3507A49F-5D3D-480F-B089-CF21A77A85D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3507A49F-5D3D-480F-B089-CF21A77A85D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3507A49F-5D3D-480F-B089-CF21A77A85D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3507A49F-5D3D-480F-B089-CF21A77A85D1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DB90FE7E-2E48-40FB-BF10-45B180966FEC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DB90FE7E-2E48-40FB-BF10-45B180966FEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DB90FE7E-2E48-40FB-BF10-45B180966FEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DB90FE7E-2E48-40FB-BF10-45B180966FEC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C2DD4FE3-6A7C-4673-943D-EBCD08258544}
+	EndGlobalSection
+EndGlobal
