@@ -7,13 +7,20 @@ namespace ExcelToolsApp
     {
         static void Main()
         {
-            var cleanOptions = new CleanOptions { FilePath = "test.xlsx", ResultFilePath = "newTestEmptyFile.xlsx" };
-            var cleanResult = new CleanResult();
+            TestCleaner();
+            Console.ReadLine();
+        }
 
-            var cleaner = new Cleaner(cleanOptions, cleanResult);
+        static void TestCleaner()
+        {
+            var cleaner = new Cleaner();
 
-            cleaner.Process();
-            Helper.PrintProgramOperationStatistics(cleanResult);
+            var result = cleaner.Process(new CleanOptions { 
+                FilePath = "test.xlsx", 
+                ResultFilePath = "test-result.xlsx" });
+
+            AppHelper.PrintProgramOperationStatistics(result);
+
         }
     }
 }

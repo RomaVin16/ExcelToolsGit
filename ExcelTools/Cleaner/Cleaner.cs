@@ -3,15 +3,47 @@ using ExcelTools.Abstraction;
 
 namespace ExcelTools.Cleaner
 {
-    public class Cleaner: ExcelHandlerBase
+    public class Cleaner: ExcelHandlerBase<CleanOptions, CleanResult>
     {
-        private readonly CleanOptions cleanOptions;
-        private readonly CleanResult cleanResult;
+        private CleanOptions options = new CleanOptions();
+        private CleanResult result  = new CleanResult();
 
-public Cleaner(CleanOptions cleanOptions, CleanResult cleanResult)
+
+        public override CleanResult Process(CleanOptions options)
         {
-            this.cleanOptions = cleanOptions;
-            this.cleanResult = cleanResult;
+            this.options = options;
+           
+            if (!options.Validate())
+            {
+                return ErrorResult("Wrong options");
+            }
+
+            try
+            {
+                DeleteEmptyStringInWorkbook();
+                return this.result;
+            }
+            catch (Exception e)
+            {
+                return ErrorResult(e.Message);
+            }
+
+        }
+
+        /// <summary>
+        /// удаление пустых строк в Excel файле
+        /// </summary>
+        protected void DeleteEmptyStringInWorkbook()
+        {
+            using (var workbook = new XLWorkbook(options.FilePath))
+            {
+                foreach (var item in workbook.Worksheets)
+                {
+                    DeleteEmptyRowsInSheet(item);
+                }
+
+                workbook.SaveAs(options.ResultFilePath);
+            }
         }
 
         /// <summary>
@@ -19,9 +51,10 @@ public Cleaner(CleanOptions cleanOptions, CleanResult cleanResult)
         /// </summary>
         /// <param name="item"></param>
         /// <param name="result"></param>
-        public void DeleteEmptyRowsInSheet(IXLWorksheet item, CleanResult result)
+        protected void DeleteEmptyRowsInSheet(IXLWorksheet item)
         {
-            if (item.IsEmpty()) return;
+            if (item.IsEmpty()) 
+                return;
 
             for (var i = item.LastRowUsed().RowNumber(); i >= 1; i--)
             {
@@ -34,42 +67,8 @@ public Cleaner(CleanOptions cleanOptions, CleanResult cleanResult)
             }
         }
 
-        /// <summary>
-        /// удаление пустых строк в Excel файле
-        /// </summary>
-        public CleanResult DeleteEmptyStringInWorkbook()
-        {
-            using (var workbook = new XLWorkbook(cleanOptions.FilePath))
-            {
-                foreach (var item in workbook.Worksheets)
-                {
-                    DeleteEmptyRowsInSheet(item, cleanResult);
-                }
+   
 
-                workbook.SaveAs(cleanOptions.ResultFilePath);
-
-                return cleanResult;
-            }
-        }
-
-        public override void Process()
-        {
-            try
-            {
-                if (cleanOptions.FilePath != null)
-                {
-                    DeleteEmptyStringInWorkbook();
-                }
-                else
-                {
-                    throw new Exception("Настройки не заданы.");
-                }
-            }
-            catch (Exception e)
-            {
-                cleanResult.Code = (ExcelResultBase.ResultCode)1;
-                cleanResult.ErrorMessage = e.Message;
-            }
-        }
+       
     }
     }

@@ -11,5 +11,7 @@ namespace ExcelTools.Cleaner
     {
         public int RowsProcessed { get; set; }
         public int RowsRemoved { get; set; }
+
+        
     }
 }
