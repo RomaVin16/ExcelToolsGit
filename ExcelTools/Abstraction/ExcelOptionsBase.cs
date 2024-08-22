@@ -1,6 +1,4 @@
-﻿using DocumentFormat.OpenXml.Office.CoverPageProps;
-
-namespace ExcelTools.Abstraction
+﻿namespace ExcelTools.Abstraction
 {
     public class ExcelOptionsBase
     {
@@ -10,7 +8,6 @@ namespace ExcelTools.Abstraction
         public virtual bool Validate()
         {
             return !string.IsNullOrEmpty(FilePath) && !string.IsNullOrEmpty(ResultFilePath);
-
         }
     }
 }

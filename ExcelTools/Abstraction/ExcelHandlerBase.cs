@@ -4,11 +4,11 @@
         where TOptions: ExcelOptionsBase 
         where TResult : ExcelResultBase, new()
     {
-        public abstract TResult Process(TOptions options);
+        public abstract TResult Process(TOptions _options);
 
         public TResult ErrorResult(string message)
         {
-            return new TResult() { Code = ResultCode.Error, ErrorMessage = message };
+            return new TResult { Code = ResultCode.Error, ErrorMessage = message };
         }
        
     }

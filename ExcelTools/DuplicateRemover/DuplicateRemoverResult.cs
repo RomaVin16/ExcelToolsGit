@@ -1,8 +1,8 @@
 ﻿using ExcelTools.Abstraction;
 
-namespace ExcelTools.Cleaner
+namespace ExcelTools.DuplicateRemover
 {
-    public class CleanResult : ExcelResultBase
+    public class DuplicateRemoverResult: ExcelResultBase
     {
         public int RowsProcessed { get; set; }
         public int RowsRemoved { get; set; }

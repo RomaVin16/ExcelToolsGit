@@ -8,7 +8,11 @@ namespace ExcelTools.Cleaner
         private CleanOptions options = new CleanOptions();
         private CleanResult result  = new CleanResult();
 
-
+/// <summary>
+/// Удаление пустых строк
+/// </summary>
+/// <param name="options"></param>
+/// <returns></returns>
         public override CleanResult Process(CleanOptions options)
         {
             this.options = options;
@@ -47,10 +51,9 @@ namespace ExcelTools.Cleaner
         }
 
         /// <summary>
-        /// Удаление только пустых строк в конкретном листе
+        /// Удаление пустых строк в конкретном листе
         /// </summary>
         /// <param name="item"></param>
-        /// <param name="result"></param>
         protected void DeleteEmptyRowsInSheet(IXLWorksheet item)
         {
             if (item.IsEmpty()) 
@@ -66,9 +69,5 @@ namespace ExcelTools.Cleaner
                 }
             }
         }
-
-   
-
-       
     }
     }
