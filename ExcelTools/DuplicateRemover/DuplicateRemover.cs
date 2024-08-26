@@ -140,7 +140,6 @@ namespace ExcelTools.DuplicateRemover
                 result.RowsProcessed++;
             }
 
-
             workbook.SaveAs(options.ResultFilePath);
         }
 
