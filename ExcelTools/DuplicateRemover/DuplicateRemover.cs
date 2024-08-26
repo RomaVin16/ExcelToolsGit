@@ -67,36 +67,33 @@ namespace ExcelTools.DuplicateRemover
             if (item.IsEmpty())
                 return;
 
-            var dictionary = new Dictionary<string, object?>();
+            var dictionary = new Dictionary<string, object>();
+            var lastRowNum = item.LastRowUsed().RowNumber();
+            var i = options.SkipRows + 1;
 
-            for (var i = options.SkipRows + 1; i <= item.LastRowUsed().RowNumber(); i++)
+            while (i <= lastRowNum)
             {
-                result.RowsProcessed++;
-
                 var currentRow = item.Row(i);
+                i++;
 
                 if (currentRow.IsEmpty())
                     continue;
 
                 var currentRowKey = GetRowKey(currentRow);
 
-                if (i == 1)
-                {
-                    currentRow = item.Row(1);
-                    currentRowKey = GetRowKey(currentRow);
-                    dictionary.Add(currentRowKey, null);
-                }
-
                 if (dictionary.ContainsKey(currentRowKey))
                 {
                     currentRow.Delete();
-
                     result.RowsRemoved++;
+                    i--;
                 }
                 else
                 {
-                    dictionary.Add(currentRowKey, currentRow);
+                    dictionary.Add(currentRowKey, new object());
+
                 }
+
+                result.RowsProcessed++;
             }
         }
 
@@ -108,7 +105,7 @@ namespace ExcelTools.DuplicateRemover
         protected void DeleteDuplicateByKey(string[] keyColumns)
         {
             using var workbook = new XLWorkbook(options.FilePath);
-            var item = workbook.Worksheet(2);
+            var item = workbook.Worksheet(1);
 
             if (item.IsEmpty())
             {
@@ -117,34 +114,31 @@ namespace ExcelTools.DuplicateRemover
 
             var uniqueRows = new HashSet<string>();
 
-            for (var i = options.SkipRows + 1; i <= item.LastRowUsed().RowNumber() + 1; i++)
+            var lastRowNum = item.LastRowUsed().RowNumber();
+            var i = options.SkipRows + 1;
+            while (i <= lastRowNum)
             {
-                result.RowsProcessed++;
-
                 var currentRow = item.Row(i);
 
+                i++;
                 if (currentRow.IsEmpty())
                     continue;
 
                 var currentRowKey = GetRowKey(currentRow, keyColumns);
 
-                if (i == 1)
-                {
-                    var firstRow = item.FirstRowUsed();
-                    var firstRowKey = GetRowKey(firstRow, keyColumns);
-                    uniqueRows.Add(firstRowKey);
-                    continue;
-                }
-
                 if (uniqueRows.Contains(currentRowKey))
                 {
                     currentRow.Delete();
                     result.RowsRemoved++;
+                    lastRowNum--;
+                    i--;
                 }
                 else
                 {
                     uniqueRows.Add(currentRowKey);
                 }
+
+                result.RowsProcessed++;
             }
 
             workbook.SaveAs(options.ResultFilePath);
@@ -158,7 +152,7 @@ namespace ExcelTools.DuplicateRemover
         /// <returns></returns>
         private string GetRowKey(IXLRow row, string[] keyColumns)
         {
-            return string.Join(",", keyColumns.Select(column => row.Cell(column).Value.ToString() ?? string.Empty));
+            return string.Join("_", keyColumns.Select(column => row.Cell(column).Value.ToString() ?? string.Empty));
         }
 
         /// <summary>
