@@ -1,4 +1,6 @@
 ﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Drawing;
+using DocumentFormat.OpenXml.Spreadsheet;
 using ExcelTools.Abstraction;
 
 
@@ -49,10 +51,6 @@ namespace ExcelTools.DuplicateRemover
         {
             {
                 using var workbook = new XLWorkbook(options.FilePath);
-                foreach (var item in workbook.Worksheets)
-                {
-                    DeleteDuplicateInSheet(item);
-                }
 
                 DeleteDuplicateInSheet(workbook.Worksheet(1));
 
@@ -69,79 +67,57 @@ namespace ExcelTools.DuplicateRemover
             if (item.IsEmpty())
                 return;
 
-            var dictionary = new Dictionary<string, object>();
+            var dictionary = new Dictionary<string, object?>();
 
-            var currentRow = item.FirstRowUsed();
-            var rowKey = GetRowKey(currentRow);
-            dictionary.Add(rowKey, currentRow);
-
-            for (var i = options.SkipRows + 2; i <= item.LastRowUsed().RowNumber(); i++)
+            for (var i = options.SkipRows + 1; i <= item.LastRowUsed().RowNumber(); i++)
             {
                 result.RowsProcessed++;
 
-                currentRow = item.Row(i);
-                rowKey = GetRowKey(currentRow);
+                var currentRow = item.Row(i);
 
                 if (currentRow.IsEmpty())
                     continue;
 
-                if (dictionary.TryGetValue(rowKey, out var value))
+                var currentRowKey = GetRowKey(currentRow);
+
+                if (i == 1)
                 {
+                    currentRow = item.Row(1);
+                    currentRowKey = GetRowKey(currentRow);
+                    dictionary.Add(currentRowKey, null);
+                }
 
-                    var stringBeingChecked = value as IXLRow;
-
-                    if (!CompareRows(currentRow, stringBeingChecked)) continue;
+                if (dictionary.ContainsKey(currentRowKey))
+                {
                     currentRow.Delete();
+
                     result.RowsRemoved++;
                 }
                 else
                 {
-                    dictionary.Add(rowKey, currentRow);
+                    dictionary.Add(currentRowKey, currentRow);
                 }
             }
         }
 
         /// <summary>
-        /// Проверка строк на дублирование
+        /// Удаление дубликатов в листе по заданному ключу
         /// </summary>
-        /// <param name="currentRow"></param>
-        /// <param name="stringBeingChecked"></param>
-        /// <returns></returns>
-        protected bool CompareRows(IXLRow currentRow, IXLRow stringBeingChecked)
-        {
-            var isDuplicate = true;
-
-            for (var i = 2; i <= currentRow.LastCellUsed().Address.ColumnNumber; i++)
-            {
-                var currentCell = currentRow.Cell(i);
-                var cellBeingChecked = stringBeingChecked?.Cell(i);
-
-                if (currentCell.Value.ToString() != cellBeingChecked.Value.ToString() | currentCell.FormulaA1 != cellBeingChecked.FormulaA1)
-                {
-                    return false;
-                }
-            }
-
-            return isDuplicate;
-        }
-
-/// <summary>
-/// Удаление дубликатов в листе по заданному ключу
-/// </summary>
-/// <param name="item"></param>
-/// <param name="keyColumns"></param>
+        /// <param name="item"></param>
+        /// <param name="keyColumns"></param>
         protected void DeleteDuplicateByKey(string[] keyColumns)
         {
             using var workbook = new XLWorkbook(options.FilePath);
-            var item = workbook.Worksheet(1);
+            var item = workbook.Worksheet(2);
+
+            if (item.IsEmpty())
+            {
+                throw new Exception("List is empty.");
+            }
 
             var uniqueRows = new HashSet<string>();
 
-            var firstRow = item.FirstRowUsed();
-            var firstRowKey = GetRowKey(firstRow, keyColumns);
-            uniqueRows.Add(firstRowKey);
-
-            for (var i = options.SkipRows + 2; i <= item.LastRowUsed().RowNumber(); i++)
+            for (var i = options.SkipRows + 1; i <= item.LastRowUsed().RowNumber() + 1; i++)
             {
                 result.RowsProcessed++;
 
@@ -151,6 +127,14 @@ namespace ExcelTools.DuplicateRemover
                     continue;
 
                 var currentRowKey = GetRowKey(currentRow, keyColumns);
+
+                if (i == 1)
+                {
+                    var firstRow = item.FirstRowUsed();
+                    var firstRowKey = GetRowKey(firstRow, keyColumns);
+                    uniqueRows.Add(firstRowKey);
+                    continue;
+                }
 
                 if (uniqueRows.Contains(currentRowKey))
                 {
@@ -184,7 +168,7 @@ namespace ExcelTools.DuplicateRemover
         /// <returns></returns>
         private string GetRowKey(IXLRow row)
         {
-            return string.Join("_", row.Cells().Select(cell => cell.Value.ToString() ?? string.Empty));
+            return string.Join("_", row.Cells().Select(cell => cell.Value.ToString()));
         }
     }
 }

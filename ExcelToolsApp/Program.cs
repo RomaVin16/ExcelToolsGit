@@ -1,5 +1,4 @@
 ﻿using ExcelTools.App;
-using ExcelTools.Cleaner;
 using ExcelTools.DuplicateRemover;
 
 namespace ExcelToolsApp
@@ -17,11 +16,12 @@ namespace ExcelToolsApp
             var remover = new DuplicateRemover();
 
             var result = remover.Process(new DuplicateRemoverOptions() { 
-                FilePath = "test.xlsx", 
-                ResultFilePath = "test-result.xlsx" });
+                FilePath = "test3.xlsx", 
+                ResultFilePath = "test-result.xlsx", 
+                KeysForRowsComparison = new []{ "B","C" }
+            });
 
             AppHelper.PrintProgramOperationStatistics(result);
-
         }
     }
 }
