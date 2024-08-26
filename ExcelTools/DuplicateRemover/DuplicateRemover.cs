@@ -81,6 +81,13 @@ namespace ExcelTools.DuplicateRemover
 
                 var currentRowKey = GetRowKey(currentRow);
 
+                if (i == 1)
+                {
+                    currentRow = item.Row(1);
+                    currentRowKey = GetRowKey(currentRow);
+                    dictionary.Add(currentRowKey, null);
+                }
+
                 if (dictionary.ContainsKey(currentRowKey))
                 {
                     currentRow.Delete();
@@ -89,11 +96,8 @@ namespace ExcelTools.DuplicateRemover
                 }
                 else
                 {
-                    dictionary.Add(currentRowKey, new object());
-
+                    dictionary.Add(currentRowKey, currentRow);
                 }
-
-                result.RowsProcessed++;
             }
         }
 
@@ -114,24 +118,27 @@ namespace ExcelTools.DuplicateRemover
 
             var uniqueRows = new HashSet<string>();
 
-            var lastRowNum = item.LastRowUsed().RowNumber();
-            var i = options.SkipRows + 1;
-            while (i <= lastRowNum)
+            for (var i = options.SkipRows + 1; i <= item.LastRowUsed().RowNumber() + 1; i++)
             {
                 var currentRow = item.Row(i);
 
-                i++;
                 if (currentRow.IsEmpty())
                     continue;
 
                 var currentRowKey = GetRowKey(currentRow, keyColumns);
 
+                if (i == 1)
+                {
+                    var firstRow = item.FirstRowUsed();
+                    var firstRowKey = GetRowKey(firstRow, keyColumns);
+                    uniqueRows.Add(firstRowKey);
+                    continue;
+                }
+
                 if (uniqueRows.Contains(currentRowKey))
                 {
                     currentRow.Delete();
                     result.RowsRemoved++;
-                    lastRowNum--;
-                    i--;
                 }
                 else
                 {
