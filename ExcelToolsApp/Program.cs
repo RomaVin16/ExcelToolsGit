@@ -1,5 +1,5 @@
 ﻿using ExcelTools.App;
-using ExcelTools.Cleaner;
+using ExcelTools.DuplicateRemover;
 
 namespace ExcelToolsApp
 {
@@ -13,14 +13,14 @@ namespace ExcelToolsApp
 
         static void TestCleaner()
         {
-            var cleaner = new Cleaner();
+            var remover = new DuplicateRemover();
 
-            var result = cleaner.Process(new CleanOptions { 
+            var result = remover.Process(new DuplicateRemoverOptions() { 
                 FilePath = "test.xlsx", 
-                ResultFilePath = "test-result.xlsx" });
+                ResultFilePath = "test-result.xlsx",
+            });
 
             AppHelper.PrintProgramOperationStatistics(result);
-
         }
     }
 }
