@@ -67,7 +67,7 @@ namespace ExcelTools.DuplicateRemover
             if (item.IsEmpty())
                 return;
 
-            var dictionary = new Dictionary<string, object>();
+            var dictionary = new HashSet<string>();
             var lastRowNum = item.LastRowUsed().RowNumber();
             var i = options.SkipRows + 1;
 
@@ -81,22 +81,16 @@ namespace ExcelTools.DuplicateRemover
 
                 var currentRowKey = GetRowKey(currentRow);
 
-                if (i == 1)
-                {
-                    currentRow = item.Row(1);
-                    currentRowKey = GetRowKey(currentRow);
-                    dictionary.Add(currentRowKey, null);
-                }
-
-                if (dictionary.ContainsKey(currentRowKey))
+                if (dictionary.Contains(currentRowKey))
                 {
                     currentRow.Delete();
                     result.RowsRemoved++;
+                    lastRowNum--;
                     i--;
                 }
                 else
                 {
-                    dictionary.Add(currentRowKey, currentRow);
+                    dictionary.Add(currentRowKey);
                 }
             }
         }
@@ -118,27 +112,25 @@ namespace ExcelTools.DuplicateRemover
 
             var uniqueRows = new HashSet<string>();
 
-            for (var i = options.SkipRows + 1; i <= item.LastRowUsed().RowNumber() + 1; i++)
+            var lastRowNum = item.LastRowUsed().RowNumber();
+            var i = options.SkipRows + 1;
+
+            while (i <= lastRowNum)
             {
                 var currentRow = item.Row(i);
 
+                i++;
                 if (currentRow.IsEmpty())
                     continue;
 
                 var currentRowKey = GetRowKey(currentRow, keyColumns);
 
-                if (i == 1)
-                {
-                    var firstRow = item.FirstRowUsed();
-                    var firstRowKey = GetRowKey(firstRow, keyColumns);
-                    uniqueRows.Add(firstRowKey);
-                    continue;
-                }
-
                 if (uniqueRows.Contains(currentRowKey))
                 {
                     currentRow.Delete();
                     result.RowsRemoved++;
+                    lastRowNum--;
+                    i--;
                 }
                 else
                 {

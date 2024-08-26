@@ -18,6 +18,7 @@ namespace ExcelToolsApp
             var result = remover.Process(new DuplicateRemoverOptions() { 
                 FilePath = "test.xlsx", 
                 ResultFilePath = "test-result.xlsx",
+                KeysForRowsComparison = new []{ "B","C" }
             });
 
             AppHelper.PrintProgramOperationStatistics(result);
