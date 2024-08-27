@@ -4,6 +4,6 @@ namespace ExcelTools.Cleaner
 {
     public class CleanOptions: ExcelOptionsBase
     {
-        //public bool CleanWhiteSpaceRows { get; set; }
+        public string FilePath { get; set; }
     }
 }

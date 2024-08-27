@@ -27,7 +27,6 @@ namespace ExcelTools.Cleaner
             {
                 return ErrorResult(e.Message);
             }
-
         }
 
         /// <summary>
@@ -66,9 +65,5 @@ namespace ExcelTools.Cleaner
                 }
             }
         }
-
-   
-
-       
     }
     }
