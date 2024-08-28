@@ -33,7 +33,7 @@ public override MergerResult Process(MergerOptions options)
 protected void MergeDataFromFiles(string[] mergeFilePath)
 {
     using var workbook = new XLWorkbook(mergeFilePath[0]);
-    var firstWorksheet = workbook.Worksheet(1);
+    var mainWorksheet = workbook.Worksheet(1);
 
             for (var i = 1; i < mergeFilePath.Length; i++)
     {
@@ -45,31 +45,28 @@ protected void MergeDataFromFiles(string[] mergeFilePath)
             continue;
         }
 
-        InsertDataIntoSheet(firstWorksheet, worksheet);
+        CopyData(mainWorksheet, worksheet);
     }
 
     workbook.SaveAs(options.ResultFilePath);
 }
 
-protected void InsertDataIntoSheet(IXLWorksheet firstWorksheet, IXLWorksheet worksheet)
+/// <summary>
+/// Копирование диапазона из одного файла в другой
+/// </summary>
+/// <param name="mainWorksheet"></param>
+/// <param name="worksheet"></param>
+protected void CopyData(IXLWorksheet mainWorksheet, IXLWorksheet worksheet)
 {
-    var targetRow = firstWorksheet.LastRowUsed().RowNumber() + 1;
-    var targetColumn = firstWorksheet.FirstColumnUsed().ColumnNumber();
+            var firstTableCell = worksheet.Cell(worksheet.FirstRowUsed().RowNumber() + options.SkipRows, worksheet.FirstColumnUsed().ColumnNumber());
+            var lastTableCell = worksheet.Cell(worksheet.LastRowUsed().RowNumber(), worksheet.LastColumnUsed().ColumnNumber());
 
-            var sourceRow = worksheet.FirstRowUsed().RowNumber() + options.SkipRows;
+            var rngData = worksheet.Range(firstTableCell.Address, lastTableCell.Address);
 
-            for (var i = targetRow; i <= worksheet.RowsUsed().Count() - options.SkipRows + targetRow; i++)
-    {
-        var firstColumnInCurrentFile = worksheet.FirstColumnUsed().ColumnNumber();
+            var row = mainWorksheet.LastRowUsed().RowNumber() + 1;
+            var column = mainWorksheet.FirstColumnUsed().ColumnNumber();
 
-        for (var j = targetColumn; j <= worksheet.ColumnsUsed().Count() + 1; j++)
-        {
-            firstWorksheet.Cell(i, j).Value = worksheet.Cell(sourceRow, firstColumnInCurrentFile).Value;
-            firstColumnInCurrentFile++;
+            mainWorksheet.Cell(row, column).Value = rngData.CopyTo(mainWorksheet.Cell(row, column)).FirstCell().Value;
         }
-
-        sourceRow++;
     }
 }
-    }
-    }
