@@ -53,7 +53,7 @@ namespace ExcelTools.App
             }
             else
             {
-                Console.WriteLine("Program is success");
+                Console.WriteLine("Количество объединенных файлов: " + result.NumberOfMergedFiles);
             }
 
         }

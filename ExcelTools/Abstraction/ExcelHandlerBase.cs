@@ -10,6 +10,5 @@
         {
             return new TResult() { Code = ResultCode.Error, ErrorMessage = message };
         }
-       
     }
 }
