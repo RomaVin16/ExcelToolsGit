@@ -19,7 +19,7 @@ namespace ExcelToolsApp
                 MergeFilePaths = new []{ "merge_1.xlsx","merge_2.xlsx","merge_3.xlsx" },
                 ResultFilePath = "new_merge_result.xlsx",
                 SkipRows = 1, 
-                MergeMode = MergerOptions.MergeType.Table
+                MergeMode = MergerOptions.MergeType.Sheets
             });
 
             AppHelper.PrintProgramOperationStatistics(result);
