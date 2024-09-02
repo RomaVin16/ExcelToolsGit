@@ -1,5 +1,6 @@
 ﻿using ClosedXML.Excel;
 using ExcelTools.Abstraction;
+using ExcelTools.Exceptions;
 
 namespace ExcelTools.Cleaner
 {
@@ -15,7 +16,7 @@ namespace ExcelTools.Cleaner
            
             if (!options.Validate())
             {
-                return ErrorResult("Wrong options");
+                throw new ExcelToolsException("Wrong options");
             }
 
             try
@@ -27,7 +28,6 @@ namespace ExcelTools.Cleaner
             {
                 return ErrorResult(e.Message);
             }
-
         }
 
         /// <summary>
@@ -66,9 +66,5 @@ namespace ExcelTools.Cleaner
                 }
             }
         }
-
-   
-
-       
     }
     }

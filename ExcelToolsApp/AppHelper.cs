@@ -1,6 +1,7 @@
 ﻿using ExcelTools.Abstraction;
 using ExcelTools.Cleaner;
 using ExcelTools.DuplicateRemover;
+using ExcelTools.Merger;
 
 namespace ExcelTools.App
 {
@@ -38,6 +39,23 @@ namespace ExcelTools.App
                 Console.WriteLine("Rows processed: " + result.RowsProcessed);
                 Console.WriteLine("Rows removed: " + result.RowsRemoved);
             }
+        }
+
+        /// <summary>
+        /// Вывод статистики работы программы на консоль
+        /// </summary>
+        /// <param name="result"></param>
+        public static void PrintProgramOperationStatistics(MergerResult result)
+        {
+            if (result.Code == ResultCode.Error)
+            {
+                Console.WriteLine("Error occured: " + result.ErrorMessage);
+            }
+            else
+            {
+                Console.WriteLine("Количество объединенных файлов: " + result.NumberOfMergedFiles);
+            }
+
         }
     }
 }

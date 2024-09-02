@@ -1,7 +1,6 @@
 ﻿using ClosedXML.Excel;
-using DocumentFormat.OpenXml.Drawing;
-using DocumentFormat.OpenXml.Spreadsheet;
 using ExcelTools.Abstraction;
+using ExcelTools.Exceptions;
 
 
 namespace ExcelTools.DuplicateRemover
@@ -22,7 +21,7 @@ namespace ExcelTools.DuplicateRemover
 
             if (!options.Validate())
             {
-                return ErrorResult("Wrong options");
+                throw new ExcelToolsException("Wrong options");
             }
 
             try
@@ -107,7 +106,7 @@ namespace ExcelTools.DuplicateRemover
 
             if (item.IsEmpty())
             {
-                throw new Exception("List is empty.");
+                throw new ExcelToolsException("List is empty!");
             }
 
             var uniqueRows = new HashSet<string>();

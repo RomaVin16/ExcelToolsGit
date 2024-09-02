@@ -1,5 +1,5 @@
 ﻿using ExcelTools.App;
-using ExcelTools.DuplicateRemover;
+using ExcelTools.Merger;
 
 namespace ExcelToolsApp
 {
@@ -8,17 +8,18 @@ namespace ExcelToolsApp
         static void Main()
         {
             TestCleaner();
-            Console.ReadLine();
         }
 
         static void TestCleaner()
         {
-            var remover = new DuplicateRemover();
+            var merger = new Merger();
 
-            var result = remover.Process(new DuplicateRemoverOptions() { 
-                FilePath = "test.xlsx", 
-                ResultFilePath = "test-result.xlsx",
-                KeysForRowsComparison = new []{ "B","C" }
+            var result = merger.Process(new MergerOptions
+            { 
+                MergeFilePaths = new []{ "merge_1.xlsx","merge_2.xlsx","merge_3.xlsx" },
+                ResultFilePath = "new_merge_result.xlsx",
+                SkipRows = 1, 
+                MergeMode = MergerOptions.MergeType.Table
             });
 
             AppHelper.PrintProgramOperationStatistics(result);
