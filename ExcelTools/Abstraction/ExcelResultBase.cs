@@ -1,6 +1,5 @@
 ﻿namespace ExcelTools.Abstraction
 {
-
     public enum ResultCode
     {
         Success,

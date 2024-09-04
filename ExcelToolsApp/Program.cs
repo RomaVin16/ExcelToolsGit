@@ -1,5 +1,6 @@
 ﻿using ExcelTools.App;
 using ExcelTools.Merger;
+using ExcelTools.Splitter;
 
 namespace ExcelToolsApp
 {
@@ -7,19 +8,20 @@ namespace ExcelToolsApp
     {
         static void Main()
         {
-            TestCleaner();
+            TestSplitter();
         }
 
-        static void TestCleaner()
+        static void TestSplitter()
         {
-            var merger = new Merger();
+            var splitter = new Splitter();
 
-            var result = merger.Process(new MergerOptions
-            { 
-                MergeFilePaths = new []{ "merge_1.xlsx","merge_2.xlsx","merge_3.xlsx" },
-                ResultFilePath = "new_merge_result.xlsx",
-                SkipRows = 1, 
-                MergeMode = MergerOptions.MergeType.Sheets
+            var result = splitter.Process(new SplitterOptions()
+            {
+                FilePath = "split_input.xlsx",
+                ResultFilePath = "new_file{0}.xlsx",
+                SplitMode = SplitterOptions.SplitType.SplitByFiles,
+                AddHeaderRows = 1,
+                ResultsCount = 3
             });
 
             AppHelper.PrintProgramOperationStatistics(result);
