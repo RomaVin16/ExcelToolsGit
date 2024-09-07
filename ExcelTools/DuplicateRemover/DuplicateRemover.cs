@@ -51,7 +51,7 @@ namespace ExcelTools.DuplicateRemover
             {
                 using var workbook = new XLWorkbook(options.FilePath);
 
-                DeleteDuplicateInSheet(workbook.Worksheet(1));
+                DeleteDuplicateInSheet(workbook.Worksheet(options.SheetNumber));
 
                 workbook.SaveAs(options.ResultFilePath);
             }

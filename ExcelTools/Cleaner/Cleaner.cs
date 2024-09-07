@@ -37,10 +37,8 @@ namespace ExcelTools.Cleaner
         {
             using (var workbook = new XLWorkbook(options.FilePath))
             {
-                foreach (var item in workbook.Worksheets)
-                {
-                    DeleteEmptyRowsInSheet(item);
-                }
+                DeleteEmptyRowsInSheet(workbook.Worksheet(options.SheetNumber));
+                
 
                 workbook.SaveAs(options.ResultFilePath);
             }

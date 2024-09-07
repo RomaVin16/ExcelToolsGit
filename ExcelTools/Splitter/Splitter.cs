@@ -23,9 +23,13 @@ namespace ExcelTools.Splitter
                 {
                     SplitFileByNumberOfFiles();
                 }
-                else
+                else if (options.SplitMode == SplitterOptions.SplitType.SplitByRows)
                 {
                     SplitFileByNumberOfRows();
+                }
+                else
+                {
+                    return ErrorResult("This split method is not supported!");
                 }
 
                 return this.result;
@@ -42,7 +46,7 @@ namespace ExcelTools.Splitter
         protected void SplitFileByNumberOfFiles()
         {
             using var workbook = new XLWorkbook(options.FilePath);
-        var worksheet = workbook.Worksheet(1);
+        var worksheet = workbook.Worksheet(options.SheetNumber);
 
         var firstRowNumber = worksheet.FirstRowUsed().RowNumber();
         var firstColumnNumber = worksheet.FirstColumnUsed().ColumnNumber();
@@ -56,15 +60,55 @@ namespace ExcelTools.Splitter
 
         var headerRange = worksheet.Range(firstRowNumber, firstColumnNumber, (int)lastRowNumber, lastColumnNumber);
 
+        CopyDataInSheet(worksheet, firstRowNumberInRange, firstColumnNumber, lastRowNumber, lastColumnNumber, headerRange, firstRowNumber, numberOfRowInResultFiles);
+        }
+
+    /// <summary>
+    /// Разделить таблицу по количеству строк
+    /// </summary>
+    protected void SplitFileByNumberOfRows()
+        {
+            using var workbook = new XLWorkbook(options.FilePath);
+            var worksheet = workbook.Worksheet(options.SheetNumber);
+
+            var firstRowNumber = worksheet.FirstRowUsed().RowNumber();
+            var firstColumnNumber = worksheet.FirstColumnUsed().ColumnNumber();
+
+            var lastRowNumber =  firstRowNumber - 1 + options.ResultsCount + options.AddHeaderRows;
+            var lastColumnNumber = worksheet.LastColumnUsed().ColumnNumber();
+
+            var firstRowNumberInRange = firstRowNumber + options.AddHeaderRows;
+
+            var headerRange = worksheet.Range(firstRowNumber, firstColumnNumber, lastRowNumber, lastColumnNumber);
+
+            var totalFiles = (int)Math.Ceiling((double)(worksheet.RowsUsed().Count() - options.AddHeaderRows) / options.ResultsCount);
+
+            CopyDataInSheet(worksheet, firstRowNumberInRange, firstColumnNumber, lastRowNumber, lastColumnNumber, headerRange, firstRowNumber, totalFiles);
+            
+        }
+
+    /// <summary>
+    /// Копирование данных 
+    /// </summary>
+    /// <param name="worksheet"></param>
+    /// <param name="firstRowNumberInRange"></param>
+    /// <param name="firstColumnNumber"></param>
+    /// <param name="lastRowNumber"></param>
+    /// <param name="lastColumnNumber"></param>
+    /// <param name="headerRange"></param>
+    /// <param name="firstRowNumber"></param>
+    /// <param name="numberOfRowInResultFiles"></param>
+    protected void CopyDataInSheet(IXLWorksheet worksheet, int firstRowNumberInRange, int firstColumnNumber, double lastRowNumber, int lastColumnNumber, IXLRange headerRange, int firstRowNumber, double numberOfRowInResultFiles)
+    {
         for (var i = 1; i <= options.ResultsCount; i++)
         {
-            var newWorkbook = new XLWorkbook();
+            using var newWorkbook = new XLWorkbook();
             var newWorksheet = newWorkbook.AddWorksheet("Sheet1");
 
             var rngData = worksheet.Range(firstRowNumberInRange, firstColumnNumber, (int)lastRowNumber, lastColumnNumber);
 
-                headerRange.CopyTo(newWorksheet.Cell(firstRowNumber, firstColumnNumber));
-                rngData.CopyTo(newWorksheet.Cell(firstRowNumber + options.AddHeaderRows, firstColumnNumber));
+            headerRange.CopyTo(newWorksheet.Cell(firstRowNumber, firstColumnNumber));
+            rngData.CopyTo(newWorksheet.Cell(firstRowNumber + options.AddHeaderRows, firstColumnNumber));
 
             newWorkbook.SaveAs(string.Format(options.ResultFilePath, i));
             result.NumberOfResultFiles++;
@@ -75,41 +119,36 @@ namespace ExcelTools.Splitter
         }
 
     /// <summary>
-    /// Разделить таблицу по количеству строк
+    /// Копирование данных 
     /// </summary>
-    protected void SplitFileByNumberOfRows()
+    /// <param name="worksheet"></param>
+    /// <param name="firstRowNumberInRange"></param>
+    /// <param name="firstColumnNumber"></param>
+    /// <param name="lastRowNumber"></param>
+    /// <param name="lastColumnNumber"></param>
+    /// <param name="headerRange"></param>
+    /// <param name="firstRowNumber"></param>
+    /// <param name="totalFiles"></param>
+    protected void CopyDataInSheet(IXLWorksheet worksheet, int firstRowNumberInRange, int firstColumnNumber, int lastRowNumber, int lastColumnNumber, IXLRange headerRange, int firstRowNumber, int totalFiles)
+    {
+        for (var i = 1; i <= totalFiles; i++)
         {
-            using var workbook = new XLWorkbook(options.FilePath);
-            var worksheet = workbook.Worksheet(1);
+            using var newWorkbook = new XLWorkbook();
+            var newWorksheet = newWorkbook.AddWorksheet("Sheet1");
 
-            var firstRowNumber = worksheet.FirstRowUsed().RowNumber();
-            var firstColumnNumber = worksheet.FirstColumnUsed().ColumnNumber();
+            var rngData = worksheet.Range(firstRowNumberInRange, firstColumnNumber, lastRowNumber, lastColumnNumber);
 
-            var lastRowNumber =  firstRowNumber - 1 + options.ResultsCount + options.AddHeaderRows;
-            var lastColumnNumber = worksheet.LastColumnUsed().ColumnNumber();
+            headerRange.CopyTo(newWorksheet.Cell(firstRowNumber, firstColumnNumber));
+            rngData.CopyTo(newWorksheet.Cell(firstRowNumber + options.AddHeaderRows, firstColumnNumber));
 
-            var firstRowNumberInRange = firstRowNumber + options.AddHeaderRows;
+            newWorkbook.SaveAs(string.Format(options.ResultFilePath, i));
+            result.NumberOfResultFiles++;
 
-            var headerAddress = worksheet.Range(firstRowNumber, firstColumnNumber, lastRowNumber, lastColumnNumber);
-
-            var totalFiles = (int)Math.Ceiling((double)(worksheet.RowsUsed().Count() - options.AddHeaderRows) / options.ResultsCount);
-
-            for (var i = 1; i <= totalFiles; i++)
-            {
-                var newWorkbook = new XLWorkbook();
-                var newWorksheet = newWorkbook.AddWorksheet("Sheet1");
-
-                var rngData = worksheet.Range(firstRowNumberInRange, firstColumnNumber, lastRowNumber, lastColumnNumber);
-
-                    headerAddress.CopyTo(newWorksheet.Cell(firstRowNumber, firstColumnNumber));
-                    rngData.CopyTo(newWorksheet.Cell(firstRowNumber + options.AddHeaderRows, firstColumnNumber));
-
-                newWorkbook.SaveAs(string.Format(options.ResultFilePath, i));
-                result.NumberOfResultFiles++;
-
-                firstRowNumberInRange += options.ResultsCount;
-                lastRowNumber += options.ResultsCount;
-            }
+            firstRowNumberInRange += options.ResultsCount;
+            lastRowNumber += options.ResultsCount;
+        }
         }
     }
 }
+
+

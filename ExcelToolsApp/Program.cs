@@ -1,5 +1,4 @@
 ﻿using ExcelTools.App;
-using ExcelTools.Merger;
 using ExcelTools.Splitter;
 
 namespace ExcelToolsApp
@@ -19,9 +18,10 @@ namespace ExcelToolsApp
             {
                 FilePath = "split_input.xlsx",
                 ResultFilePath = "new_file{0}.xlsx",
-                SplitMode = SplitterOptions.SplitType.SplitByFiles,
+                ResultsCount = 20, 
                 AddHeaderRows = 1,
-                ResultsCount = 3
+                SplitMode = SplitterOptions.SplitType.SplitByRows
+
             });
 
             AppHelper.PrintProgramOperationStatistics(result);
