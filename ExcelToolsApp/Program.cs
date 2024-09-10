@@ -1,4 +1,5 @@
 ﻿using ExcelTools.App;
+using ExcelTools.ColumnSplitter;
 using ExcelTools.Splitter;
 
 namespace ExcelToolsApp
@@ -12,16 +13,16 @@ namespace ExcelToolsApp
 
         static void TestSplitter()
         {
-            var splitter = new Splitter();
+            var splitter = new ColumnSplitter();
 
-            var result = splitter.Process(new SplitterOptions()
+            var result = splitter.Process(new ColumnSplitterOptions()
             {
-                FilePath = "split_input.xlsx",
-                ResultFilePath = "new_file{0}.xlsx",
-                ResultsCount = 20, 
-                AddHeaderRows = 1,
-                SplitMode = SplitterOptions.SplitType.SplitByRows
-
+                FilePath = "column_split_input.xlsx",
+                ResultFilePath = "new_file.xlsx", 
+                ColumnName = "D", 
+                SheetNumber = 1, 
+                SkipHeaderRows = 1, 
+                SplitSymbols = " "
             });
 
             AppHelper.PrintProgramOperationStatistics(result);

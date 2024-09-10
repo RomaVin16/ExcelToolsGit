@@ -7,9 +7,6 @@ namespace ExcelTools.DuplicateRemover
 {
     public class DuplicateRemover : ExcelHandlerBase<DuplicateRemoverOptions, DuplicateRemoverResult>
     {
-        private DuplicateRemoverOptions options = new DuplicateRemoverOptions();
-        private DuplicateRemoverResult result = new DuplicateRemoverResult();
-
         /// <summary>
         /// Удаление дубликатов
         /// </summary>
@@ -17,7 +14,7 @@ namespace ExcelTools.DuplicateRemover
         /// <returns></returns>
         public override DuplicateRemoverResult Process(DuplicateRemoverOptions options)
         {
-            this.options = options;
+            Options = options;
 
             if (!options.Validate())
             {
@@ -35,7 +32,7 @@ namespace ExcelTools.DuplicateRemover
                     DeleteDuplicateInWorkbook();
                 }
 
-                return this.result;
+                return Result;
             }
             catch (Exception e)
             {
@@ -49,11 +46,11 @@ namespace ExcelTools.DuplicateRemover
         protected void DeleteDuplicateInWorkbook()
         {
             {
-                using var workbook = new XLWorkbook(options.FilePath);
+                using var workbook = new XLWorkbook(Options.FilePath);
 
-                DeleteDuplicateInSheet(workbook.Worksheet(options.SheetNumber));
+                DeleteDuplicateInSheet(workbook.Worksheet(Options.SheetNumber));
 
-                workbook.SaveAs(options.ResultFilePath);
+                workbook.SaveAs(Options.ResultFilePath);
             }
         }
 
@@ -68,7 +65,7 @@ namespace ExcelTools.DuplicateRemover
 
             var dictionary = new HashSet<string>();
             var lastRowNum = item.LastRowUsed().RowNumber();
-            var i = options.SkipRows + 1;
+            var i = Options.SkipRows + 1;
 
             while (i <= lastRowNum)
             {
@@ -83,7 +80,7 @@ namespace ExcelTools.DuplicateRemover
                 if (dictionary.Contains(currentRowKey))
                 {
                     currentRow.Delete();
-                    result.RowsRemoved++;
+                    Result.RowsRemoved++;
                     lastRowNum--;
                     i--;
                 }
@@ -101,7 +98,7 @@ namespace ExcelTools.DuplicateRemover
         /// <param name="keyColumns"></param>
         protected void DeleteDuplicateByKey(string[] keyColumns)
         {
-            using var workbook = new XLWorkbook(options.FilePath);
+            using var workbook = new XLWorkbook(Options.FilePath);
             var item = workbook.Worksheet(1);
 
             if (item.IsEmpty())
@@ -112,7 +109,7 @@ namespace ExcelTools.DuplicateRemover
             var uniqueRows = new HashSet<string>();
 
             var lastRowNum = item.LastRowUsed().RowNumber();
-            var i = options.SkipRows + 1;
+            var i = Options.SkipRows + 1;
 
             while (i <= lastRowNum)
             {
@@ -127,7 +124,7 @@ namespace ExcelTools.DuplicateRemover
                 if (uniqueRows.Contains(currentRowKey))
                 {
                     currentRow.Delete();
-                    result.RowsRemoved++;
+                    Result.RowsRemoved++;
                     lastRowNum--;
                     i--;
                 }
@@ -136,10 +133,10 @@ namespace ExcelTools.DuplicateRemover
                     uniqueRows.Add(currentRowKey);
                 }
 
-                result.RowsProcessed++;
+                Result.RowsProcessed++;
             }
 
-            workbook.SaveAs(options.ResultFilePath);
+            workbook.SaveAs(Options.ResultFilePath);
         }
 
         /// <summary>

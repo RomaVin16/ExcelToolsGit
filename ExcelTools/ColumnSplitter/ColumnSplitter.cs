@@ -1,22 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ClosedXML.Excel;
+﻿using ClosedXML.Excel;
 using ExcelTools.Abstraction;
-using ExcelTools.Splitter;
+using ExcelTools.Exceptions;
 
 namespace ExcelTools.ColumnSplitter
 {
     public class ColumnSplitter: ExcelHandlerBase<ColumnSplitterOptions, ColumnSplitterResult>
     {
-ColumnSplitterOptions options = new ColumnSplitterOptions();
-private ColumnSplitterResult result = new ColumnSplitterResult();
-
         public override ColumnSplitterResult Process(ColumnSplitterOptions options)
         {
-            this.options = options;
+            Options = options;
 
             if (!options.Validate())
             {
@@ -25,10 +17,9 @@ private ColumnSplitterResult result = new ColumnSplitterResult();
 
             try
             {
-                
                 SplitColumn();
 
-                return this.result;
+                return this.Result;
             }
             catch (Exception e)
             {
@@ -38,38 +29,46 @@ private ColumnSplitterResult result = new ColumnSplitterResult();
 
         protected void SplitColumn()
         {
-            var workbook = new XLWorkbook(options.FilePath);
-            var worksheet = workbook.Worksheet(options.SheetNumber);
+            using var workbook = new XLWorkbook(Options.FilePath);
+            var worksheet = workbook.Worksheet(Options.SheetNumber);
 
-            var columnName = options.ColumnName;
+            if (worksheet.Column(Options.ColumnName).IsEmpty())
+            {
+                throw new ExcelToolsException("Column is empty!");
+            }
+
             string[] splitRow;
 
+            var firstRowForProcessing = worksheet.Column(Options.ColumnName).FirstCellUsed().Address.RowNumber + Options.SkipHeaderRows;
+            var lastRowForProcessing = worksheet.Column(Options.ColumnName).LastCellUsed().Address.RowNumber;
+
             var maxSplitLength = 0;
-            for (var i = worksheet.Column(columnName).FirstCellUsed().Address.RowNumber + options.SkipHeaderRows; i <= worksheet.Column(columnName).LastCellUsed().Address.RowNumber; i++)
+            for (var i = firstRowForProcessing; i <= lastRowForProcessing; i++)
             {
-                splitRow = worksheet.Cell(i, columnName).Value.ToString().Split(options.SplitSymbols).ToArray();
+                splitRow = worksheet.Cell(i, Options.ColumnName).Value.ToString().Split(Options.SplitSymbols).ToArray();
                 maxSplitLength = Math.Max(maxSplitLength, splitRow.Length);
             }
 
-            result.CreatedColumns = maxSplitLength;
+            Result.CreatedColumns = maxSplitLength;
 
-            worksheet.Column(columnName).InsertColumnsAfter(maxSplitLength);
+            worksheet.Column(Options.ColumnName).InsertColumnsAfter(maxSplitLength);
+            int column;
 
-            for (var i = worksheet.Column(columnName).FirstCellUsed().Address.RowNumber + options.SkipHeaderRows; i <= worksheet.Column(columnName).LastCellUsed().Address.RowNumber; i++)
+            for (var i = firstRowForProcessing; i <= lastRowForProcessing; i++)
             {
-                splitRow = worksheet.Cell(i, columnName).Value.ToString().Split(options.SplitSymbols).ToArray();
-                var column = worksheet.Column(columnName).ColumnNumber();
+                splitRow = worksheet.Cell(i, Options.ColumnName).Value.ToString().Split(Options.SplitSymbols).ToArray();
+                column = worksheet.Column(Options.ColumnName).ColumnNumber();
 
                 foreach (var item in splitRow)
                 {
-                    worksheet.Cell(i,column + 1).Value = item;
+                    worksheet.Cell(i, column + 1).Value = item;
                     column++;
                 }
 
-                result.ProcessedRows++;
+                Result.ProcessedRows++;
             }
 
-            workbook.SaveAs(options.ResultFilePath);
+            workbook.SaveAs(Options.ResultFilePath);
         }
     }
 }
