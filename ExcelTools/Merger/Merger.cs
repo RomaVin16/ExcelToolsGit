@@ -6,12 +6,9 @@ namespace ExcelTools.Merger
 {
     public class Merger : ExcelHandlerBase<MergerOptions, MergerResult>
     {
-        private MergerOptions options = new MergerOptions();
-        private MergerResult result = new MergerResult();
-
         public override MergerResult Process(MergerOptions options)
         {
-            this.options = options;
+            Options = options;
 
             if (!options.Validate())
             {
@@ -22,7 +19,7 @@ namespace ExcelTools.Merger
             {
                 MergeDataFromFiles(options.MergeFilePaths);
 
-                return this.result;
+                return Result;
             }
             catch (Exception e)
             {
@@ -34,14 +31,14 @@ namespace ExcelTools.Merger
         {
             using var workbook = new XLWorkbook(mergeFilePath[0]);
 
-            if (!options.Validate())
+            if (!Options.Validate())
             {
                 throw new ExcelToolsException("Wrong options");
             }
 
             var mainWorksheet = workbook.Worksheet(1);
 
-            result.NumberOfMergedFiles++;
+            Result.NumberOfMergedFiles++;
 
             for (var i = 1; i < mergeFilePath.Length; i++)
             {
@@ -53,19 +50,19 @@ namespace ExcelTools.Merger
                     continue;
                 }
 
-                if (options.MergeMode == MergerOptions.MergeType.Table)
+                if (Options.MergeMode == MergerOptions.MergeType.Table)
                 {
                     CopyData(mainWorksheet, worksheet);
-                    result.NumberOfMergedFiles++;
+                    Result.NumberOfMergedFiles++;
                 }
                 else
                 {
                     CopySheetsInMainFile(workbook, mergeWorkbook, i);
-                    result.NumberOfMergedFiles++;
+                    Result.NumberOfMergedFiles++;
                 }
             }
 
-            workbook.SaveAs(options.ResultFilePath);
+            workbook.SaveAs(Options.ResultFilePath);
         }
 
         /// <summary>
@@ -75,7 +72,7 @@ namespace ExcelTools.Merger
         /// <param name="worksheet"></param>
         protected void CopyData(IXLWorksheet mainWorksheet, IXLWorksheet worksheet)
         {
-            var firstTableCell = worksheet.Cell(worksheet.FirstRowUsed().RowNumber() + options.SkipRows,
+            var firstTableCell = worksheet.Cell(worksheet.FirstRowUsed().RowNumber() + Options.SkipRows,
                 worksheet.FirstColumnUsed().ColumnNumber());
             var lastTableCell = worksheet.Cell(worksheet.LastRowUsed().RowNumber(),
                 worksheet.LastColumnUsed().ColumnNumber());

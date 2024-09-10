@@ -6,13 +6,9 @@ namespace ExcelTools.Cleaner
 {
     public class Cleaner: ExcelHandlerBase<CleanOptions, CleanResult>
     {
-        private CleanOptions options = new CleanOptions();
-        private CleanResult result  = new CleanResult();
-
-
         public override CleanResult Process(CleanOptions options)
         {
-            this.options = options;
+            Options = options;
            
             if (!options.Validate())
             {
@@ -22,7 +18,7 @@ namespace ExcelTools.Cleaner
             try
             {
                 DeleteEmptyStringInWorkbook();
-                return this.result;
+                return Result;
             }
             catch (Exception e)
             {
@@ -35,14 +31,12 @@ namespace ExcelTools.Cleaner
         /// </summary>
         protected void DeleteEmptyStringInWorkbook()
         {
-            using (var workbook = new XLWorkbook(options.FilePath))
+            using (var workbook = new XLWorkbook(Options.FilePath))
             {
-                foreach (var item in workbook.Worksheets)
-                {
-                    DeleteEmptyRowsInSheet(item);
-                }
+                DeleteEmptyRowsInSheet(workbook.Worksheet(Options.SheetNumber));
+                
 
-                workbook.SaveAs(options.ResultFilePath);
+                workbook.SaveAs(Options.ResultFilePath);
             }
         }
 
@@ -58,11 +52,11 @@ namespace ExcelTools.Cleaner
 
             for (var i = item.LastRowUsed().RowNumber(); i >= 1; i--)
             {
-                result.RowsProcessed++;
+                Result.RowsProcessed++;
                 if (item.Row(i).IsEmpty())
                 {
                     item.Row(i).Delete();
-                    result.RowsRemoved++;
+                    Result.RowsRemoved++;
                 }
             }
         }

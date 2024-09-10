@@ -1,7 +1,9 @@
 ﻿using ExcelTools.Abstraction;
 using ExcelTools.Cleaner;
+using ExcelTools.ColumnSplitter;
 using ExcelTools.DuplicateRemover;
 using ExcelTools.Merger;
+using ExcelTools.Splitter;
 
 namespace ExcelTools.App
 {
@@ -53,9 +55,41 @@ namespace ExcelTools.App
             }
             else
             {
-                Console.WriteLine("Количество объединенных файлов: " + result.NumberOfMergedFiles);
+                Console.WriteLine("Number of merged files: " + result.NumberOfMergedFiles);
             }
+        }
 
+        /// <summary>
+        /// Вывод статистики работы программы на консоль
+        /// </summary>
+        /// <param name="result"></param>
+        public static void PrintProgramOperationStatistics(SplitterResult result)
+        {
+            if (result.Code == ResultCode.Error)
+            {
+                Console.WriteLine("Error occured: " + result.ErrorMessage);
+            }
+            else
+            {
+                Console.WriteLine("Number of files created: " + result.NumberOfResultFiles);
+            }
+        }
+
+        /// <summary>
+        /// Вывод статистики работы программы на консоль
+        /// </summary>
+        /// <param name="result"></param>
+        public static void PrintProgramOperationStatistics(ColumnSplitterResult result)
+        {
+            if (result.Code == ResultCode.Error)
+            {
+                Console.WriteLine("Error occured: " + result.ErrorMessage);
+            }
+            else
+            {
+                Console.WriteLine("Number of processed rows: " + result.ProcessedRows);
+                Console.WriteLine("number of columns added: " + result.CreatedColumns);
+            }
         }
     }
 }

@@ -4,6 +4,7 @@
     {
         public string ResultFilePath { get; set; }
         public int SkipRows { get; set; } = 0;
+        public int SheetNumber { get; set; } = 1;
 
         public virtual bool Validate()
         {
