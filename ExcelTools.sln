@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExcelTools", "ExcelTools\Ex
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExcelToolsApp", "ExcelToolsApp\ExcelToolsApp.csproj", "{DB90FE7E-2E48-40FB-BF10-45B180966FEC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelToolsTests", "ExcelToolsTests\ExcelToolsTests.csproj", "{73C90583-8AF8-4219-A9CC-171303A8FD41}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{DB90FE7E-2E48-40FB-BF10-45B180966FEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DB90FE7E-2E48-40FB-BF10-45B180966FEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DB90FE7E-2E48-40FB-BF10-45B180966FEC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73C90583-8AF8-4219-A9CC-171303A8FD41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73C90583-8AF8-4219-A9CC-171303A8FD41}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73C90583-8AF8-4219-A9CC-171303A8FD41}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73C90583-8AF8-4219-A9CC-171303A8FD41}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
