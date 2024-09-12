@@ -8,7 +8,7 @@ using System.Reflection;
 
 namespace ExcelToolsTests
 {
-    public class UnitTest1: ExcelOptionsBase
+    public class ExcelToolsTest: ExcelOptionsBase
     {
         string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
