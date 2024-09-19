@@ -1,14 +1,15 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using APILib;
+using Microsoft.Extensions.Configuration;
 
-namespace APILib
+namespace ExcelTools
 {
     public class FileProcessor
     {
-        private readonly Service service;
+        private readonly FileService service;
 
         public FileProcessor(IConfiguration configuration)
         {
-            service = new Service(configuration);
+            service = new FileService(configuration);
         }
 
         public Guid Upload(string fileName, Stream stream)
@@ -27,19 +28,9 @@ namespace APILib
 
         public Stream Download(Guid fileId)
         {
-            try
-            {
-                var filePath = Path.Combine(service.GetFolder(fileId));
+                var filePath = service.GetFolder(fileId);
 
-                var fileData = File.ReadAllBytes(Path.Combine(filePath, $"{fileId}.xlsx"));
-                return new MemoryStream(fileData);
-            }
-            catch (Exception ex)
-            {
-Console.WriteLine("Ошибка: " + ex.Message);
-            }
-
-            return null;
+                return File.OpenRead(Path.Combine(filePath, $"{fileId}.xlsx"));
         }
     }
 }

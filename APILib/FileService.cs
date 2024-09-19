@@ -7,11 +7,11 @@ using Microsoft.Extensions.Configuration;
 
 namespace APILib
 {
-    public class Service
+    public class FileService
     {
         private readonly string rootPath;
 
-        public Service(IConfiguration configuration)
+        public FileService(IConfiguration configuration)
         {
             rootPath = configuration["FileStorage:RootPath"];
         }
@@ -23,7 +23,7 @@ namespace APILib
 
             var subfolder1 = folderName.Substring(0, 2);
             var subfolder2 = folderName.Substring(2, 2);
-            var folderPath = Path.Combine(rootPath, subfolder1, subfolder2, folderName).Replace("\\", "/");
+            var folderPath = Path.Combine(rootPath, subfolder1, subfolder2, folderName).Replace(Path.DirectorySeparatorChar, '/');
 
             if (!Directory.Exists(folderPath))
             {
@@ -38,7 +38,7 @@ namespace APILib
 var folderName = fileId.ToString();
 var subfolder1 = folderName.Substring(0, 2);
 var subfolder2 = folderName.Substring(2, 2);
-var folderPath = Path.Combine(rootPath, subfolder1, subfolder2, folderName).Replace("\\", "/"); ;
+var folderPath = Path.Combine(rootPath, subfolder1, subfolder2, folderName).Replace(Path.DirectorySeparatorChar, '/');
 
 return folderPath;
         }

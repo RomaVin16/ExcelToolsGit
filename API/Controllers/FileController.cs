@@ -1,6 +1,8 @@
 ﻿using APILib;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
+using API.Models;
+using ExcelTools;
 
 namespace API.Controllers
 {
@@ -39,10 +41,5 @@ namespace API.Controllers
             }
     }
 
-    public class FileUploadRequest
-    {
-        [Required]
-        [FromForm]
-        public IFormFile File { get; set; }
-    }
+
 }
