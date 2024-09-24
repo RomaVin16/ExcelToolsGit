@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using API.Models;
 using Microsoft.Extensions.Configuration;
 
 namespace APILib
@@ -41,6 +42,25 @@ var subfolder2 = folderName.Substring(2, 2);
 var folderPath = Path.Combine(rootPath, subfolder1, subfolder2, folderName).Replace(Path.DirectorySeparatorChar, '/');
 
 return folderPath;
+        }
+
+        public FileResult Get(Guid fileId)
+        {
+            using var db = new FileRepository();
+            var result = new FileResult();
+
+                var fileName = db.Files.Where(y => y.Id == fileId)
+                    .Select(x => x.FileName)
+                    .FirstOrDefault();
+
+                var filePath = GetFolder(fileId);
+
+                var stream = File.OpenRead(Path.Combine(filePath, fileName).Replace('/', Path.DirectorySeparatorChar));
+
+                result.FileName = fileName;
+                result.FileStream = stream;
+
+                return result;
         }
     }
 }

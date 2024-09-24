@@ -10,7 +10,6 @@ namespace API.Controllers
     [ApiController]
     public class FileController : ControllerBase
     {
-
         private readonly FileProcessor fileProcessor;
 
 
@@ -34,12 +33,9 @@ namespace API.Controllers
         {
             var fileStream = fileProcessor.Download(fileId);
 
-                var fileName = $"{fileId}.xlsx";
-                var contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+            var contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
-                return File(fileStream, contentType, fileName);
+                return File(fileStream.FileStream, contentType, fileStream.FileName);
             }
     }
-
-
 }

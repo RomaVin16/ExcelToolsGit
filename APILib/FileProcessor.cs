@@ -1,5 +1,9 @@
-﻿using APILib;
+﻿
+using API.Models;
+using APILib;
+using APILib.Repository;
 using Microsoft.Extensions.Configuration;
+using static APILib.Repository.Files;
 
 namespace ExcelTools
 {
@@ -16,21 +20,23 @@ namespace ExcelTools
         {
             var (fileId, folderId) = service.CreateFolder();
 
-            var filePath = Path.Combine(folderId, $"{fileId}.xlsx");
+            var filePath = Path.Combine(folderId, fileName);
 
             using var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write);
 
             stream.CopyTo(fileStream);
 
+            using (var db = new FileRepository())
+            {
+                db.Create(db, stream, fileId, fileName);
+            }
+
             return fileId;
         }
 
-
-        public Stream Download(Guid fileId)
+        public FileResult Download(Guid fileId)
         {
-                var filePath = service.GetFolder(fileId);
-
-                return File.OpenRead(Path.Combine(filePath, $"{fileId}.xlsx"));
+            return service.Get(fileId);
         }
     }
 }
