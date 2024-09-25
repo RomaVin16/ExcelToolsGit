@@ -24,11 +24,8 @@ namespace APILib
         public (Guid fileId, string folderPath) CreateFolder()
         {
             Guid fileId = Guid.NewGuid();
-            var folderName = fileId.ToString();
-
-            var subfolder1 = folderName.Substring(0, 2);
-            var subfolder2 = folderName.Substring(2, 2);
-            var folderPath = Path.Combine(rootPath, subfolder1, subfolder2, folderName);
+           
+            var folderPath = GetFolder(fileId);
 
             if (!Directory.Exists(folderPath))
             {
@@ -40,12 +37,12 @@ namespace APILib
 
         public string GetFolder(Guid fileId)
         {
-var folderName = fileId.ToString();
-var subfolder1 = folderName.Substring(0, 2);
-var subfolder2 = folderName.Substring(2, 2);
-var folderPath = Path.Combine(rootPath, subfolder1, subfolder2, folderName);
+            var folderName = fileId.ToString();
+            var subfolder1 = folderName.Substring(0, 2);
+            var subfolder2 = folderName.Substring(2, 2);
+            var folderPath = Path.Combine(rootPath, subfolder1, subfolder2, folderName);
 
-return folderPath;
+            return folderPath;
         }
 
         public FileResult Get(Guid fileId, FileRepository db)
