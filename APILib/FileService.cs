@@ -19,7 +19,7 @@ namespace APILib
 
             var subfolder1 = folderName.Substring(0, 2);
             var subfolder2 = folderName.Substring(2, 2);
-            var folderPath = Path.Combine(rootPath, subfolder1, subfolder2, folderName).Replace(Path.DirectorySeparatorChar, '/');
+            var folderPath = Path.Combine(rootPath, subfolder1, subfolder2, folderName);
 
             if (!Directory.Exists(folderPath))
             {
@@ -34,14 +34,13 @@ namespace APILib
 var folderName = fileId.ToString();
 var subfolder1 = folderName.Substring(0, 2);
 var subfolder2 = folderName.Substring(2, 2);
-var folderPath = Path.Combine(rootPath, subfolder1, subfolder2, folderName).Replace(Path.DirectorySeparatorChar, '/');
+var folderPath = Path.Combine(rootPath, subfolder1, subfolder2, folderName);
 
 return folderPath;
         }
 
-        public FileResult Get(Guid fileId)
+        public FileResult Get(Guid fileId, FileRepository db)
         {
-            using var db = new FileRepository();
             var result = new FileResult();
 
                 var fileName = db.Files.Where(y => y.Id == fileId)
@@ -50,9 +49,9 @@ return folderPath;
 
                 var filePath = GetFolder(fileId);
 
-                var stream = File.OpenRead(Path.Combine(filePath, fileName).Replace('/', Path.DirectorySeparatorChar));
+            var stream = File.OpenRead(Path.Combine(filePath, fileName));
 
-                result.FileName = fileName;
+            result.FileName = fileName;
                 result.FileStream = stream;
 
                 return result;

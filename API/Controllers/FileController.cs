@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using API.Models;
 using ExcelTools;
+using Microsoft.AspNetCore.StaticFiles;
 
 namespace API.Controllers
 {
@@ -31,9 +32,15 @@ namespace API.Controllers
         {
             var fileStream = fileProcessor.Download(fileId);
 
-            var contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+            var provider = new FileExtensionContentTypeProvider();
+            string contentType;
 
-                return File(fileStream.FileStream, contentType, fileStream.FileName);
+            if (!provider.TryGetContentType(fileStream.FileName, out contentType))
+            {
+                contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+            }
+
+            return File(fileStream.FileStream, contentType, fileStream.FileName);
             }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using APILib.Repository;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using static APILib.Repository.Files;
 
 namespace APILib
@@ -7,18 +8,23 @@ namespace APILib
     public sealed class FileRepository: DbContext
     {
         public DbSet<Files> Files => Set<Files>();
+        private readonly string connectionString;
 
-        public FileRepository()
+        public FileRepository(IConfiguration configuration)
         {
-            Database.EnsureCreated();
+            connectionString = configuration["ConnectionStrings:DefaultConnection"];
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=Files;Username=postgres;Password=1234");
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                throw new InvalidOperationException("Строки нет");
+            }
+            optionsBuilder.UseNpgsql(connectionString);
         }
 
-        public async Task Create(FileRepository db, Stream stream, Guid fileId, string fileName)
+        public Task Create(FileRepository db, Stream stream, Guid fileId, string fileName)
         {
             var fileInfo = new Files
                 {
@@ -30,7 +36,8 @@ namespace APILib
                 };
 
                 db.Add(fileInfo);
-                db.SaveChanges();
+                db.SaveChangesAsync();
+                return Task.CompletedTask;
         }
 
         public void Update()

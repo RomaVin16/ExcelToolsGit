@@ -8,10 +8,12 @@ namespace ExcelTools
     public class FileProcessor
     {
         private readonly FileService service;
+        private readonly FileRepository db;
 
         public FileProcessor(IConfiguration configuration)
         {
             service = new FileService(configuration);
+            db = new FileRepository(configuration);
         }
 
         public Guid Upload(string fileName, Stream stream)
@@ -24,17 +26,14 @@ namespace ExcelTools
 
             stream.CopyTo(fileStream);
 
-            using (var db = new FileRepository())
-            {
                 db.Create(db, stream, fileId, fileName);
-            }
-
+                
             return fileId;
         }
 
         public FileResult Download(Guid fileId)
         {
-            return service.Get(fileId);
+            return service.Get(fileId, db);
         }
     }
 }
