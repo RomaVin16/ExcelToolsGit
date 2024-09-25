@@ -1,15 +1,24 @@
 ﻿using API.Models;
 using Microsoft.Extensions.Configuration;
+using ExcelTools.Abstraction;
+using ExcelTools.Cleaner;
+using ExcelTools.ColumnSplitter;
+using ExcelTools.DuplicateRemover;
+using ExcelTools.Merger;
+using ExcelTools.Splitter;
+using System.Reflection;
 
 namespace APILib
 {
     public class FileService
     {
         private readonly string rootPath;
+        private readonly FileRepository _db;
 
-        public FileService(IConfiguration configuration)
+        public FileService(IConfiguration configuration, FileRepository db)
         {
             rootPath = configuration["FileStorage:RootPath"];
+            _db = db;
         }
 
         public (Guid fileId, string folderPath) CreateFolder()
@@ -55,6 +64,30 @@ return folderPath;
                 result.FileStream = stream;
 
                 return result;
+        }
+
+        public Guid Clean(Guid fileId)
+        {
+            var cleaner = new Cleaner();
+
+            var fileName = _db.Files.Where(y => y.Id == fileId)
+                .Select(x => x.FileName)
+                .FirstOrDefault();
+
+            var (resultFileId, resultFolderId) = CreateFolder();
+
+            var result = cleaner.Process(new CleanOptions
+            {
+                FilePath = Path.Combine(GetFolder(fileId), fileName),
+                ResultFilePath = Path.Combine(resultFolderId, fileName)
+            });
+
+            var filePath = Path.Combine(resultFolderId, fileName);
+            var stream = File.OpenRead(filePath);
+
+            _db.Create(_db, stream, resultFileId, fileName);
+
+            return resultFileId;
         }
     }
 }

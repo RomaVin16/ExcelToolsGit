@@ -12,8 +12,8 @@ namespace ExcelTools
 
         public FileProcessor(IConfiguration configuration)
         {
-            service = new FileService(configuration);
             db = new FileRepository(configuration);
+            service = new FileService(configuration, db);
         }
 
         public Guid Upload(string fileName, Stream stream)

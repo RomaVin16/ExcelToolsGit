@@ -17,10 +17,6 @@ namespace APILib
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            if (string.IsNullOrEmpty(connectionString))
-            {
-                throw new InvalidOperationException("Строки нет");
-            }
             optionsBuilder.UseNpgsql(connectionString);
         }
 

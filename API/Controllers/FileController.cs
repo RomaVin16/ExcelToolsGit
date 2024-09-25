@@ -20,7 +20,7 @@ namespace API.Controllers
         [HttpPost("upload")]
         public async Task<IActionResult> UploadFile([FromForm] FileUploadRequest request)
         {
-            await using var stream = request.File.OpenReadStream();
+            using var stream = request.File.OpenReadStream();
             
             var fileId = fileProcessor.Upload(request.File.FileName, stream);
 
