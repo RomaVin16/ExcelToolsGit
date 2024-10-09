@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using API.Models;
+using APILib.Contracts;
 using ExcelTools;
 using Microsoft.AspNetCore.StaticFiles;
+using APILib.Repository;
 
 namespace API.Controllers
 {
@@ -9,22 +11,39 @@ namespace API.Controllers
     [ApiController]
     public class FileController : ControllerBase
     {
-        private readonly FileProcessor fileProcessor;
+        private readonly IFileProcessor fileProcessor;
+        private readonly IFileService fileService;
 
-
-        public FileController(IConfiguration configuration)
+        public FileController(IFileProcessor fileProcessor, IFileService fileService)
         {
-            fileProcessor = new FileProcessor(configuration);
+            this.fileProcessor = fileProcessor;
+            this.fileService = fileService;
         }
 
         [HttpPost("upload")]
         public async Task<IActionResult> UploadFile([FromForm] FileUploadRequest request)
         {
-            using var stream = request.File.OpenReadStream();
-            
-            var fileId = fileProcessor.Upload(request.File.FileName, stream);
+            var fileIds = new List<Guid>();
 
-            return Ok(fileId);
+            if (request.Files.Length == 1)
+            {
+                await using var stream = request.Files[0].OpenReadStream();
+
+                var fileId = await fileProcessor.UploadAsync(request.Files[0].FileName, stream);
+fileIds.Add(fileId);
+            }
+            else
+            {
+                foreach (var file in request.Files)
+                {
+                    await using var stream = file.OpenReadStream();
+
+                    var fileId = await fileProcessor.UploadAsync(file.FileName, stream);
+                    fileIds.Add(fileId);
+                }
+            }
+
+            return Ok(fileIds);
         }
 
         [HttpGet("download/{fileId}")]
@@ -32,13 +51,9 @@ namespace API.Controllers
         {
             var fileStream = fileProcessor.Download(fileId);
 
-            var provider = new FileExtensionContentTypeProvider();
-            string contentType;
+            var result = fileService.Get(fileId);
 
-            if (!provider.TryGetContentType(fileStream.FileName, out contentType))
-            {
-                contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-            }
+            var contentType = fileService.GetMime(result.FileName);
 
             return File(fileStream.FileStream, contentType, fileStream.FileName);
             }

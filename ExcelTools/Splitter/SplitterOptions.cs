@@ -10,6 +10,11 @@ namespace ExcelTools.Splitter
         public string FilePath { get; set; }
 
         /// <summary>
+        /// Индивидуальный путь к каждому созданному файлу 
+        /// </summary>
+        public Func<int, string> IndividualPathToEachFile { get; set; } = null;
+
+        /// <summary>
         /// Количество строк/файлов в новом созданном файле
         /// </summary>
         public int ResultsCount { get; set; }

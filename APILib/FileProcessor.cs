@@ -1,39 +1,41 @@
 ﻿
 using API.Models;
 using APILib;
+using APILib.Contracts;
 using Microsoft.Extensions.Configuration;
 
 namespace ExcelTools
 {
-    public class FileProcessor
+    public class FileProcessor: IFileProcessor
     {
         private readonly FileService service;
-        private readonly FileRepository db;
+        private readonly FileRepository fileRepository;
+        private readonly IArchiveService archiveService;
 
         public FileProcessor(IConfiguration configuration)
         {
-            db = new FileRepository(configuration);
-            service = new FileService(configuration, db);
+            fileRepository = new FileRepository(configuration);
+            service = new FileService(configuration, fileRepository, archiveService);
         }
 
-        public Guid Upload(string fileName, Stream stream)
+        public async Task<Guid> UploadAsync(string fileName, Stream stream)
         {
             var (fileId, folderId) = service.CreateFolder();
 
             var filePath = Path.Combine(folderId, fileName);
 
-            using var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write);
+            await using var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write);
 
-            stream.CopyTo(fileStream);
+            await stream.CopyToAsync(fileStream);
 
-                db.Create(db, stream, fileId, fileName);
-                
+            await fileRepository.Create(stream, fileId, fileName);
+
             return fileId;
         }
 
         public FileResult Download(Guid fileId)
         {
-            return service.Get(fileId, db);
+            return service.Get(fileId);
         }
     }
 }

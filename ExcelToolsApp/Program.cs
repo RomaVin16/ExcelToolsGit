@@ -1,5 +1,6 @@
 ﻿using ExcelTools.App;
 using ExcelTools.ColumnSplitter;
+using ExcelTools.Rotate;
 using ExcelTools.Splitter;
 
 namespace ExcelToolsApp
@@ -8,7 +9,7 @@ namespace ExcelToolsApp
     {
         static void Main(string[] args)
         {
-
+            AppHelper.DeleteFolder();
         }
     }
 }

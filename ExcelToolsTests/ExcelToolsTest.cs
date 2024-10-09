@@ -5,6 +5,7 @@ using ExcelTools.DuplicateRemover;
 using ExcelTools.Merger;
 using ExcelTools.Splitter;
 using System.Reflection;
+using ExcelTools.Rotate;
 
 namespace ExcelToolsTests
 {
@@ -102,6 +103,25 @@ namespace ExcelToolsTests
                 AddHeaderRows = 1, 
                 ResultsCount = 20, 
                 SplitMode = SplitterOptions.SplitType.SplitByRows
+            });
+
+            Assert.Equal(ResultCode.Success, Result.Code);
+        }
+
+        [Fact]
+        public void Rotater()
+        {
+            var inputFilePath = Path.Combine(currentDirectory, "TestFiles", "Rotater", "rotate.xlsx");
+            var outputFilePath = Path.Combine(currentDirectory, "TestFiles", "Rotater", "rotate_new.xlsx");
+
+            var rotater = new Rotater();
+
+            var Result = rotater.Process(new RotaterOptions
+            {
+                FilePath = inputFilePath,
+                ResultFilePath = outputFilePath,
+                SheetNumber = 1, 
+                SkipRows = 0
             });
 
             Assert.Equal(ResultCode.Success, Result.Code);

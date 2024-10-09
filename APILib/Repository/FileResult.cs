@@ -1,4 +1,6 @@
-﻿namespace API.Models
+﻿using APILib;
+
+namespace API.Models
 {
     public class FileResult
     {

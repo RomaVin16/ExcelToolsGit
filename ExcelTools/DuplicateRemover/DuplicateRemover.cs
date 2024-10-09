@@ -96,7 +96,7 @@ namespace ExcelTools.DuplicateRemover
         /// </summary>
         /// <param name="item"></param>
         /// <param name="keyColumns"></param>
-        protected void DeleteDuplicateByKey(string[] keyColumns)
+        protected void DeleteDuplicateByKey(string[]? keyColumns)
         {
             using var workbook = new XLWorkbook(Options.FilePath);
             var item = workbook.Worksheet(1);
@@ -145,7 +145,7 @@ namespace ExcelTools.DuplicateRemover
         /// <param name="row"></param>
         /// <param name="keyColumns"></param>
         /// <returns></returns>
-        private string GetRowKey(IXLRow row, string[] keyColumns)
+        private string GetRowKey(IXLRow row, string[]? keyColumns)
         {
             return string.Join("_", keyColumns.Select(column => row.Cell(column).Value.ToString() ?? string.Empty));
         }
