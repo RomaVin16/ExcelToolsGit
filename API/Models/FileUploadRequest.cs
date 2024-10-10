@@ -7,6 +7,6 @@ namespace API.Models
     {
         [Required]
         [FromForm]
-        public IFormFile File { get; set; }
+        public IFormFile[] Files { get; set; }
     }
 }

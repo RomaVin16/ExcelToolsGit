@@ -3,6 +3,7 @@ using ExcelTools.Cleaner;
 using ExcelTools.ColumnSplitter;
 using ExcelTools.DuplicateRemover;
 using ExcelTools.Merger;
+using ExcelTools.Rotate;
 using ExcelTools.Splitter;
 
 namespace ExcelTools.App
@@ -89,6 +90,49 @@ namespace ExcelTools.App
             {
                 Console.WriteLine("Number of processed rows: " + result.ProcessedRows);
                 Console.WriteLine("number of columns added: " + result.CreatedColumns);
+            }
+        }
+
+        /// <summary>
+        /// Вывод статистики работы программы на консоль
+        /// </summary>
+        /// <param name="result"></param>
+        public static void PrintProgramOperationStatistics(RotaterResult result)
+        {
+            if (result.Code == ResultCode.Error)
+            {
+                Console.WriteLine("Error occured: " + result.ErrorMessage);
+            }
+            else
+            {
+                Console.WriteLine("Number of processed rows: " + result.RowsProcessed);
+            }
+        }
+
+        public static void DeleteFolder()
+        {
+            var folderPath = @"C:\ExcelToolsGit\API\APIFiles";
+
+            if (Directory.Exists(folderPath))
+            {
+                var subDirectories = Directory.GetDirectories(folderPath);
+
+                foreach (var subDir in subDirectories)
+                {
+                    try
+                    {
+                        Directory.Delete(subDir, true);
+                        Console.WriteLine($"Папка {subDir} успешно удалена.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Ошибка при удалении папки {subDir}: {ex.Message}");
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine("Директория не существует.");
             }
         }
     }

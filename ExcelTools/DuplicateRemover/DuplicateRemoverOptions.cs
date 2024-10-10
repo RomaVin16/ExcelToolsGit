@@ -12,6 +12,6 @@ namespace ExcelTools.DuplicateRemover
         /// <summary>
         /// Ключ для поиска дубликатов 
         /// </summary>
-        public string[] KeysForRowsComparison { get; set; }
+        public string[]? KeysForRowsComparison { get; set; }
     }
 }

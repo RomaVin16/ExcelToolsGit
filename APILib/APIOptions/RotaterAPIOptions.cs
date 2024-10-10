@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace APILib.Repository
+namespace APILib.APIOptions
 {
-    public interface IFileRepository
+    public class RotaterAPIOptions: APIOptionsBase
     {
-        Task Create(Files files);
+        public Guid FileId { get; set; }
     }
 }

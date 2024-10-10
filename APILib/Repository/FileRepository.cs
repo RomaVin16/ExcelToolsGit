@@ -1,11 +1,12 @@
-﻿using APILib.Repository;
+﻿using APILib.Contracts;
+using APILib.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using static APILib.Repository.Files;
 
 namespace APILib
 {
-    public sealed class FileRepository: DbContext
+    public sealed class FileRepository: DbContext, IFileRepository
     {
         public DbSet<Files> Files => Set<Files>();
         private readonly string connectionString;
@@ -17,14 +18,10 @@ namespace APILib
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            if (string.IsNullOrEmpty(connectionString))
-            {
-                throw new InvalidOperationException("Строки нет");
-            }
             optionsBuilder.UseNpgsql(connectionString);
         }
 
-        public Task Create(FileRepository db, Stream stream, Guid fileId, string fileName)
+        public async Task Create(Stream stream, Guid fileId, string fileName)
         {
             var fileInfo = new Files
                 {
@@ -35,9 +32,17 @@ namespace APILib
                     SizeBytes = stream.Length,
                 };
 
-                db.Add(fileInfo);
-                db.SaveChangesAsync();
-                return Task.CompletedTask;
+                Files.Add(fileInfo);
+                await SaveChangesAsync();
+        }
+
+        public string GetFileName(Guid fileId)
+        {
+            var fileName = Files.Where(y => y.Id == fileId)
+                .Select(x => x.FileName)
+                .FirstOrDefault();
+
+            return fileName;
         }
 
         public void Update()
