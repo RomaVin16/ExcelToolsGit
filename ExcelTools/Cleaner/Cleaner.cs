@@ -35,7 +35,6 @@ namespace ExcelTools.Cleaner
             {
                 DeleteEmptyRowsInSheet(workbook.Worksheet(Options.SheetNumber));
                 
-
                 workbook.SaveAs(Options.ResultFilePath);
             }
         }

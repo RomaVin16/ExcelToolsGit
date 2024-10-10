@@ -9,7 +9,18 @@ namespace ExcelToolsApp
     {
         static void Main(string[] args)
         {
-            AppHelper.DeleteFolder();
+
+            var rotater = new Rotater();
+
+            var Result = rotater.Process(new RotaterOptions
+            {
+                FilePath = "rotate.xlsx",
+                ResultFilePath = "new_rotate.xlsx",
+                SheetNumber = 1,
+                SkipRows = 0
+            });
+
+            //AppHelper.DeleteFolder();
         }
     }
 }

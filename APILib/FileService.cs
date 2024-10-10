@@ -150,11 +150,6 @@ namespace APILib
             {
                 var fileName = _fileRepository.GetFileName(options.MergeFilePaths[i]);
 
-                if (i == 1)
-                {
-                    fileResult.FileName = fileName;
-                }
-
                 array[i] = Path.Combine(GetFolder(options.MergeFilePaths[i]), fileName);
             }
 
@@ -163,7 +158,7 @@ namespace APILib
             var result = merger.Process(new MergerOptions
             {
                 MergeFilePaths = array,
-                ResultFilePath = Path.Combine(resultFolderId, fileResult.FileName),
+                ResultFilePath = Path.Combine(resultFolderId, "merge_result.xlsx"),
                 SheetNumber = options.SheetNumber,
                 SkipRows = options.SkipRows,
                 MergeMode = (MergerOptions.MergeType)options.MergeMode
