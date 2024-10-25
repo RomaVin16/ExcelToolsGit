@@ -1,7 +1,4 @@
-﻿using System.Data;
-using System.Text;
-using ClosedXML.Excel;
-using DocumentFormat.OpenXml.Spreadsheet;
+﻿using ClosedXML.Excel;
 using ExcelTools.Abstraction;
 using ExcelTools.Exceptions;
 
@@ -47,8 +44,8 @@ var newWorksheet = newWorkbook.Worksheet(1);
 
             newWorkbook.SaveAs(Options.ResultFilePath);
 
-            helper.AddIds(sourceWorksheet, sourceFileHash, Options.Id);
-helper.AddIds(modifiedWorksheet, modifiedFileHash, Options.Id);
+            helper.AddIds(sourceWorksheet, sourceFileHash, Options.Id, Options.HeaderRows);
+helper.AddIds(modifiedWorksheet, modifiedFileHash, Options.Id, Options.HeaderRows);
 
             var rowCount = Math.Max(sourceWorksheet.LastRowUsed().RowNumber(), modifiedWorksheet.LastRowUsed().RowNumber());
 
@@ -57,8 +54,15 @@ helper.AddIds(modifiedWorksheet, modifiedFileHash, Options.Id);
 
             for (var i = rowNumberInSourceWorksheet; i <= rowCount + 1; i++)
             {
-                var sourceItem = helper.GetId(sourceWorksheet, i, Options.Id);
-                var newItem = helper.GetId(newWorksheet, i, Options.Id);
+                if (Options.HeaderRows != null && Options.HeaderRows.Contains(i))
+                {
+                    rowNumberInSourceWorksheet++;
+                    rowNumberInNewWorksheet++;
+                    continue;
+                }
+
+                var sourceItem = helper.GetId(sourceWorksheet, rowNumberInSourceWorksheet, Options.Id);
+                var newItem = helper.GetId(newWorksheet, rowNumberInNewWorksheet, Options.Id);
 
                 if (!modifiedFileHash.Contains(sourceItem) && sourceItem.Length != 0)
                 {
@@ -75,6 +79,7 @@ helper.AddIds(modifiedWorksheet, modifiedFileHash, Options.Id);
                     newWorkbook.Save();
 
                     rowNumberInNewWorksheet++;
+                    rowCount++;
                 }
                 else
                 {
@@ -93,6 +98,14 @@ helper.AddIds(modifiedWorksheet, modifiedFileHash, Options.Id);
 
             for (var j = sourceWorksheet.Row(rowNumberInSourceWorksheet).FirstCellUsed().Address.ColumnNumber; j <= sourceWorksheet.LastColumnUsed().ColumnNumber(); j++)
             {
+                var columnName = sourceWorksheet.Column(j).ColumnLetter();
+
+                if (Options.Id.Contains(columnName))
+                {
+                    newWorksheet.Cell(rowNumberInNewWorksheet, j).Value = sourceWorksheet.Cell(rowNumberInSourceWorksheet, j).Value;
+                    continue;
+                }
+
                 newWorksheet.Cell(rowNumberInNewWorksheet, j).Value = sourceWorksheet.Cell(rowNumberInSourceWorksheet, j).Value;
                 newWorksheet.Cell(rowNumberInNewWorksheet, j).Style.Fill.BackgroundColor = XLColor.Red;
             }
@@ -100,21 +113,33 @@ helper.AddIds(modifiedWorksheet, modifiedFileHash, Options.Id);
 
         protected void CheckChanges(IXLWorksheet sourceWorksheet, IXLWorksheet newWorksheet, int rowNumberInSourceWorksheet, int rowNumberInNewWorksheet)
         {
-            foreach (var key in Options.KeysForRowsComparison)
+            for (var i = sourceWorksheet.FirstColumnUsed().ColumnNumber(); i <= sourceWorksheet.LastColumnUsed().ColumnNumber(); i++)
             {
-                var column = sourceWorksheet.Column(key).ColumnNumber();
+                var columnName = sourceWorksheet.Column(i).ColumnLetter();
 
-                if (sourceWorksheet.Cell(rowNumberInSourceWorksheet, column).Value.ToString() != newWorksheet.Cell(rowNumberInNewWorksheet, column).Value.ToString())
+                if (Options.Id.Contains(columnName))
                 {
-                    newWorksheet.Cell(rowNumberInNewWorksheet, column).Style.Fill.BackgroundColor = XLColor.Yellow;
+                    continue;
+                }
+
+                if (sourceWorksheet.Cell(rowNumberInSourceWorksheet, i).Value.ToString() != newWorksheet.Cell(rowNumberInNewWorksheet,i).Value.ToString())
+                {
+                    newWorksheet.Cell(rowNumberInNewWorksheet, i).Style.Fill.BackgroundColor = XLColor.Yellow;
                 }
             }
         }
 
         protected void InsertTheAddedRows(IXLWorksheet sourceWorksheet, IXLWorksheet newWorksheet, int rowNumberInNewWorksheet)
         {
-            for (var j = sourceWorksheet.Row(rowNumberInNewWorksheet).FirstCellUsed().Address.ColumnNumber; j <= newWorksheet.LastColumnUsed().ColumnNumber(); j++)
+            for (var j = newWorksheet.Row(rowNumberInNewWorksheet).FirstCellUsed().Address.ColumnNumber; j <= newWorksheet.LastColumnUsed().ColumnNumber(); j++)
             {
+                var columnName = sourceWorksheet.Column(j).ColumnLetter();
+
+                if (Options.Id.Contains(columnName))
+                {
+                    continue;
+                }
+
                 newWorksheet.Cell(rowNumberInNewWorksheet, j).Style.Fill.BackgroundColor = XLColor.Green;
             }
         }

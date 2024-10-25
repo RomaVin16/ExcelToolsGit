@@ -14,12 +14,12 @@ namespace ExcelToolsApp
 
             var result = comparison.Process(new ComparisonOptions
             {
-                SourceFilePath = "comparison1.xlsx",
-                ModifiedFilePath = "comparison2.xlsx",
-                KeysForRowsComparison = new[] { "E" },
-                Id = new[] { "C" },
+                SourceFilePath = "test1.xlsx",
+                ModifiedFilePath = "test1-changed.xlsx",
+                Id = new[] { "B" },
                 ResultFilePath = "new_comparison.xlsx",
-                SheetNumber = 1
+                SheetNumber = 1,
+                HeaderRows = new []{ 2 }
             });
 
             //AppHelper.DeleteFolder();

@@ -30,10 +30,15 @@ namespace ExcelTools.Comparison
             return result.ToString();
         }
 
-        public void AddIds(IXLWorksheet worksheet, HashSet<string> hash, string[] idStrings)
+        public void AddIds(IXLWorksheet worksheet, HashSet<string> hash, string[] idStrings, int[] headers)
         {
             for (var i = worksheet.FirstRowUsed().RowNumber(); i <= worksheet.LastRowUsed().RowNumber(); i++)
             {
+                if (headers != null && headers.Contains(i))
+                {
+                    continue;
+                }
+
                 hash.Add(GetId(worksheet, i, idStrings));
             }
         }
