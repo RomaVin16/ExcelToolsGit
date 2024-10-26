@@ -62,6 +62,26 @@ helper.AddIds(modifiedWorksheet, modifiedFileHash, Options.Id, Options.HeaderRow
                 }
 
                 var sourceItem = helper.GetId(sourceWorksheet, rowNumberInSourceWorksheet, Options.Id);
+
+                if (!helper.CheckId(sourceWorksheet, Options.Id, rowNumberInSourceWorksheet) )
+                {
+                    rowNumberInSourceWorksheet++;
+                }
+
+                if (!helper.CheckId(newWorksheet, Options.Id, rowNumberInNewWorksheet))
+                {
+                    if (!modifiedFileHash.Contains(sourceItem) && sourceItem.Length != 0)
+                    {
+                        InsertTheDeletedRows(sourceWorksheet, newWorksheet, rowNumberInSourceWorksheet, rowNumberInNewWorksheet);
+                        newWorkbook.Save();
+
+                        rowCount++;
+                    }
+
+                    rowNumberInNewWorksheet++;
+                }
+
+                sourceItem = helper.GetId(sourceWorksheet, rowNumberInSourceWorksheet, Options.Id);
                 var newItem = helper.GetId(newWorksheet, rowNumberInNewWorksheet, Options.Id);
 
                 if (!modifiedFileHash.Contains(sourceItem) && sourceItem.Length != 0)
@@ -98,15 +118,7 @@ helper.AddIds(modifiedWorksheet, modifiedFileHash, Options.Id, Options.HeaderRow
 
             for (var j = sourceWorksheet.Row(rowNumberInSourceWorksheet).FirstCellUsed().Address.ColumnNumber; j <= sourceWorksheet.LastColumnUsed().ColumnNumber(); j++)
             {
-                var columnName = sourceWorksheet.Column(j).ColumnLetter();
-
-                if (Options.Id.Contains(columnName))
-                {
-                    newWorksheet.Cell(rowNumberInNewWorksheet, j).Value = sourceWorksheet.Cell(rowNumberInSourceWorksheet, j).Value;
-                    continue;
-                }
-
-                newWorksheet.Cell(rowNumberInNewWorksheet, j).Value = sourceWorksheet.Cell(rowNumberInSourceWorksheet, j).Value;
+newWorksheet.Cell(rowNumberInNewWorksheet, j).Value = sourceWorksheet.Cell(rowNumberInSourceWorksheet, j).Value;
                 newWorksheet.Cell(rowNumberInNewWorksheet, j).Style.Fill.BackgroundColor = XLColor.Red;
             }
         }
@@ -133,13 +145,6 @@ helper.AddIds(modifiedWorksheet, modifiedFileHash, Options.Id, Options.HeaderRow
         {
             for (var j = newWorksheet.Row(rowNumberInNewWorksheet).FirstCellUsed().Address.ColumnNumber; j <= newWorksheet.LastColumnUsed().ColumnNumber(); j++)
             {
-                var columnName = sourceWorksheet.Column(j).ColumnLetter();
-
-                if (Options.Id.Contains(columnName))
-                {
-                    continue;
-                }
-
                 newWorksheet.Cell(rowNumberInNewWorksheet, j).Style.Fill.BackgroundColor = XLColor.Green;
             }
         }

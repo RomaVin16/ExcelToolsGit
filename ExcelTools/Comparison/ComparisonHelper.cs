@@ -24,7 +24,7 @@ namespace ExcelTools.Comparison
             {
                 var cellValue = worksheet.Cell(intRowNumber, columnName).GetValue<string>();
 
-                result.Append(cellValue);
+                    result.Append(cellValue);
             }
 
             return result.ToString();
@@ -34,13 +34,18 @@ namespace ExcelTools.Comparison
         {
             for (var i = worksheet.FirstRowUsed().RowNumber(); i <= worksheet.LastRowUsed().RowNumber(); i++)
             {
-                if (headers != null && headers.Contains(i))
+                if ((headers != null && headers.Contains(i)) || !CheckId(worksheet, idStrings, i))
                 {
                     continue;
                 }
 
                 hash.Add(GetId(worksheet, i, idStrings));
             }
+        }
+
+        public bool CheckId(IXLWorksheet worksheet, string[] idStrings, int rowNumber)
+        {
+            return idStrings.Select(columnName => worksheet.Cell(rowNumber, columnName).GetValue<string>()).All(cellValue => cellValue != "");
         }
     }
 }
