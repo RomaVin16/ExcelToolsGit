@@ -361,3 +361,9 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+APIFiles/
+
+# Ignore build output directories
+bin/
+obj/
