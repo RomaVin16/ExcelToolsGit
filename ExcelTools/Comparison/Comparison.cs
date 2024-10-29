@@ -42,6 +42,8 @@ using var newWorkbook = new XLWorkbook();
 modifiedWorksheet.CopyTo(newWorkbook, modifiedWorksheet.Name);
 var newWorksheet = newWorkbook.Worksheet(1);
 
+
+
             newWorkbook.SaveAs(Options.ResultFilePath);
 
             helper.AddIds(sourceWorksheet, sourceFileHash, Options.Id, Options.HeaderRows);
@@ -114,6 +116,13 @@ helper.AddIds(modifiedWorksheet, modifiedFileHash, Options.Id, Options.HeaderRow
             }
         }
 
+/// <summary>
+/// Вставка удаленной строки 
+/// </summary>
+/// <param name="sourceWorksheet"></param>
+/// <param name="newWorksheet"></param>
+/// <param name="rowNumberInSourceWorksheet"></param>
+/// <param name="rowNumberInNewWorksheet"></param>
         protected void InsertTheDeletedRows(IXLWorksheet sourceWorksheet, IXLWorksheet newWorksheet, int rowNumberInSourceWorksheet, int rowNumberInNewWorksheet)
         {
             newWorksheet.Row(rowNumberInNewWorksheet - 1).InsertRowsBelow(1);
@@ -121,12 +130,24 @@ helper.AddIds(modifiedWorksheet, modifiedFileHash, Options.Id, Options.HeaderRow
             for (var j = sourceWorksheet.Row(rowNumberInSourceWorksheet).FirstCellUsed().Address.ColumnNumber; j <= sourceWorksheet.LastColumnUsed().ColumnNumber(); j++)
             {
 newWorksheet.Cell(rowNumberInNewWorksheet, j).Value = sourceWorksheet.Cell(rowNumberInSourceWorksheet, j).Value;
-                newWorksheet.Cell(rowNumberInNewWorksheet, j).Style.Fill.BackgroundColor = XLColor.Red;
+                newWorksheet.Cell(rowNumberInNewWorksheet, j).Style.Fill.BackgroundColor = XLColor.CadmiumRed;
             }
+
+            var comment = newWorksheet.Row(rowNumberInNewWorksheet).FirstCellUsed().CreateComment();
+            comment.AddText("Это строка была удалена.");
         }
 
+/// <summary>
+/// Проверка изменений в строке 
+/// </summary>
+/// <param name="sourceWorksheet"></param>
+/// <param name="newWorksheet"></param>
+/// <param name="rowNumberInSourceWorksheet"></param>
+/// <param name="rowNumberInNewWorksheet"></param>
         protected void CheckChanges(IXLWorksheet sourceWorksheet, IXLWorksheet newWorksheet, int rowNumberInSourceWorksheet, int rowNumberInNewWorksheet)
-        {
+{
+    var helper = new ComparisonHelper();
+
             for (var i = sourceWorksheet.FirstColumnUsed().ColumnNumber(); i <= sourceWorksheet.LastColumnUsed().ColumnNumber(); i++)
             {
                 var columnName = sourceWorksheet.Column(i).ColumnLetter();
@@ -139,17 +160,28 @@ newWorksheet.Cell(rowNumberInNewWorksheet, j).Value = sourceWorksheet.Cell(rowNu
                 if (sourceWorksheet.Cell(rowNumberInSourceWorksheet, i).Value.ToString() != newWorksheet.Cell(rowNumberInNewWorksheet,i).Value.ToString())
                 {
                     newWorksheet.Cell(rowNumberInNewWorksheet, i).Style.Fill.BackgroundColor = XLColor.Yellow;
+
+                    helper.InsertCommentInCell(newWorksheet.Cell(rowNumberInNewWorksheet, i), sourceWorksheet.Cell(rowNumberInSourceWorksheet, i).Value.ToString(), newWorksheet.Cell(rowNumberInNewWorksheet, i).Value.ToString());
                 }
             }
-        }
+}
 
-        protected void InsertTheAddedRows(IXLWorksheet sourceWorksheet, IXLWorksheet newWorksheet, int rowNumberInNewWorksheet)
-        {
-            for (var j = newWorksheet.Row(rowNumberInNewWorksheet).FirstCellUsed().Address.ColumnNumber; j <= newWorksheet.LastColumnUsed().ColumnNumber(); j++)
-            {
-                newWorksheet.Cell(rowNumberInNewWorksheet, j).Style.Fill.BackgroundColor = XLColor.Green;
-            }
-        }
+/// <summary>
+/// Закрашивание добавленных строк 
+/// </summary>
+/// <param name="sourceWorksheet"></param>
+/// <param name="newWorksheet"></param>
+/// <param name="rowNumberInNewWorksheet"></param>
+protected void InsertTheAddedRows(IXLWorksheet sourceWorksheet, IXLWorksheet newWorksheet, int rowNumberInNewWorksheet)
+{
+    for (var j = newWorksheet.Row(rowNumberInNewWorksheet).FirstCellUsed().Address.ColumnNumber; j <= newWorksheet.LastColumnUsed().ColumnNumber(); j++)
+    {
+        newWorksheet.Cell(rowNumberInNewWorksheet, j).Style.Fill.BackgroundColor = XLColor.Green;
+    }
+
+    var comment = newWorksheet.Row(rowNumberInNewWorksheet).FirstCellUsed().CreateComment();
+    comment.AddText("Добавлена новая строка.");
+}
     }
 }
 

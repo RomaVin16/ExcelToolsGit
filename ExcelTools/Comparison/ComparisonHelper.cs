@@ -47,5 +47,11 @@ namespace ExcelTools.Comparison
         {
             return idStrings.Select(columnName => worksheet.Cell(rowNumber, columnName).GetValue<string>()).All(cellValue => cellValue != "");
         }
+
+        public void InsertCommentInCell(IXLCell cell, string oldValue, string newValue)
+        {
+            var comment = cell.CreateComment();
+            comment.AddText($"Исходное значение: {oldValue}, Новое значение: {newValue}");
+        }
     }
 }
