@@ -14,8 +14,8 @@ namespace ExcelToolsApp
 
             var result = comparison.Process(new ComparisonOptions
             {
-                SourceFilePath = "test3.xlsx",
-                ModifiedFilePath = "test3-changed.xlsx",
+                SourceFilePath = "test3-changed.xlsx",
+                ModifiedFilePath = "test3.xlsx",
                 Id = new[] { "B" },
                 ResultFilePath = "new_comparison.xlsx",
                 SheetNumber = 1,

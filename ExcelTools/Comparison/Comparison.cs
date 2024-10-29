@@ -75,6 +75,8 @@ helper.AddIds(modifiedWorksheet, modifiedFileHash, Options.Id, Options.HeaderRow
                         InsertTheDeletedRows(sourceWorksheet, newWorksheet, rowNumberInSourceWorksheet, rowNumberInNewWorksheet);
                         newWorkbook.Save();
 
+                        rowNumberInSourceWorksheet++;
+
                         rowCount++;
                     }
 
@@ -93,7 +95,7 @@ helper.AddIds(modifiedWorksheet, modifiedFileHash, Options.Id, Options.HeaderRow
                     rowNumberInNewWorksheet++;
                     rowCount++;
                 }
-                else if(!sourceFileHash.Contains(newItem))
+                else if(!sourceFileHash.Contains(newItem) && newItem != "")
                 {
                     InsertTheAddedRows(sourceWorksheet, newWorksheet, rowNumberInNewWorksheet);
                     newWorkbook.Save();
@@ -101,7 +103,7 @@ helper.AddIds(modifiedWorksheet, modifiedFileHash, Options.Id, Options.HeaderRow
                     rowNumberInNewWorksheet++;
                     rowCount++;
                 }
-                else
+                else if (newItem != "" && sourceItem !="")
                 {
                     CheckChanges(sourceWorksheet, newWorksheet, rowNumberInSourceWorksheet, rowNumberInNewWorksheet);
                     newWorkbook.Save();
