@@ -30,7 +30,7 @@ namespace ExcelTools.Comparison
             return result.ToString();
         }
 
-        public void AddIds(IXLWorksheet worksheet, HashSet<string> hash, string[] idStrings, int[] headers)
+        public void AddIds(IXLWorksheet worksheet, Dictionary<string, int> dictionary, string[] idStrings, int[] headers)
         {
             for (var i = worksheet.FirstRowUsed().RowNumber(); i <= worksheet.LastRowUsed().RowNumber(); i++)
             {
@@ -39,7 +39,7 @@ namespace ExcelTools.Comparison
                     continue;
                 }
 
-                hash.Add(GetId(worksheet, i, idStrings));
+                dictionary.Add(GetId(worksheet, i, idStrings), i);
             }
         }
 
