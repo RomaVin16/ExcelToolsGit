@@ -1,9 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using API.Models;
 using APILib.Contracts;
-using ExcelTools;
-using Microsoft.AspNetCore.StaticFiles;
-using APILib.Repository;
 
 namespace API.Controllers
 {

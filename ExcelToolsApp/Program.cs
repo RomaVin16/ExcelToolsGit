@@ -1,5 +1,6 @@
 ﻿using ExcelTools.App;
 using ExcelTools.ColumnSplitter;
+using ExcelTools.Comparison;
 using ExcelTools.Rotate;
 using ExcelTools.Splitter;
 
@@ -9,15 +10,16 @@ namespace ExcelToolsApp
     {
         static void Main(string[] args)
         {
+            var comparison = new Comparison();
 
-            var rotater = new Rotater();
-
-            var Result = rotater.Process(new RotaterOptions
+            var result = comparison.Process(new ComparisonOptions
             {
-                FilePath = "rotate.xlsx",
-                ResultFilePath = "new_rotate.xlsx",
+                SourceFilePath = "test3-changed.xlsx",
+                ModifiedFilePath = "test3.xlsx",
+                Id = new[] { "B" },
+                ResultFilePath = "new_comparison.xlsx",
                 SheetNumber = 1,
-                SkipRows = 0
+                HeaderRows = new []{ 2 }
             });
 
             //AppHelper.DeleteFolder();

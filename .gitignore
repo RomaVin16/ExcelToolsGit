@@ -363,3 +363,7 @@ MigrationBackup/
 FodyWeavers.xsd
 
 APIFiles/
+
+# Ignore build output directories
+bin/
+obj/
