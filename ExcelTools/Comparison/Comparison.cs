@@ -43,7 +43,6 @@ modifiedWorksheet.CopyTo(newWorkbook, modifiedWorksheet.Name);
 var newWorksheet = newWorkbook.Worksheet(1);
 
 
-
             newWorkbook.SaveAs(Options.ResultFilePath);
 
             helper.AddIds(sourceWorksheet, sourceFileHash, Options.Id, Options.HeaderRows);
