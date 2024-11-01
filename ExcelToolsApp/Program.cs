@@ -1,8 +1,4 @@
-﻿using ExcelTools.App;
-using ExcelTools.ColumnSplitter;
-using ExcelTools.Comparison;
-using ExcelTools.Rotate;
-using ExcelTools.Splitter;
+﻿using ExcelTools.Comparison;
 
 namespace ExcelToolsApp
 {
@@ -16,7 +12,7 @@ namespace ExcelToolsApp
             {
                 SourceFilePath = "test7.xlsx",
                 ModifiedFilePath = "test7-changed.xlsx",
-                Id = new[] { "A" },
+                Id = new[] { "C" },
                 ResultFilePath = "new_comparison.xlsx",
                 SheetNumber = 1,
                 HeaderRows = new[] { 2 }
