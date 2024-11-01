@@ -29,8 +29,8 @@ namespace ExcelTools.Comparison
         protected void Compare()
         {
             var helper = new ComparisonHelper();
-            var sourceFileHash = new HashSet<string>(); 
-            var modifiedFileHash = new HashSet<string>();
+            var sourceFileDictionary = new Dictionary<string, int>();
+            var newFileDictionary = new Dictionary<string, int>();
 
             using var sourceWorkbook = new XLWorkbook(Options.SourceFilePath);
 var sourceWorksheet = sourceWorkbook.Worksheet(Options.SheetNumber);
@@ -42,76 +42,45 @@ using var newWorkbook = new XLWorkbook();
 modifiedWorksheet.CopyTo(newWorkbook, modifiedWorksheet.Name);
 var newWorksheet = newWorkbook.Worksheet(1);
 
-
             newWorkbook.SaveAs(Options.ResultFilePath);
 
-            helper.AddIds(sourceWorksheet, sourceFileHash, Options.Id, Options.HeaderRows);
-helper.AddIds(modifiedWorksheet, modifiedFileHash, Options.Id, Options.HeaderRows);
+            helper.AddIds(sourceWorksheet, sourceFileDictionary, Options.Id, Options.HeaderRows);
+helper.AddIds(newWorksheet, newFileDictionary, Options.Id, Options.HeaderRows);
 
-            var rowCount = Math.Max(sourceWorksheet.LastRowUsed().RowNumber(), modifiedWorksheet.LastRowUsed().RowNumber());
+var rowCount = Math.Max(sourceWorksheet.RowsUsed().Count(), newWorksheet.RowsUsed().Count());
 
-            var rowNumberInSourceWorksheet = sourceWorksheet.FirstRowUsed().RowNumber();
-            var rowNumberInNewWorksheet = sourceWorksheet.FirstRowUsed().RowNumber();
+for (var i = sourceWorksheet.FirstRowUsed().RowNumber(); i <= rowCount; i++)
+{
+    if (Options.HeaderRows != null && Options.HeaderRows.Contains(i))
+    {
+        continue;
+    }
 
-            for (var i = rowNumberInSourceWorksheet; i <= rowCount + 1; i++)
-            {
-                if (Options.HeaderRows != null && Options.HeaderRows.Contains(i))
+                var sourceItem = helper.GetId(sourceWorksheet, i, Options.Id);
+    var modifiedItem = helper.GetId(newWorksheet, i, Options.Id);
+
+    if (newFileDictionary.TryGetValue(sourceItem, out var modifiedItemRowNumber))
+    {
+        CheckChanges(sourceWorksheet, newWorksheet, i, modifiedItemRowNumber);
+        newWorkbook.Save();
+    }
+
+    if (!newFileDictionary.ContainsKey(sourceItem) && sourceItem != "")
+    {
+        InsertTheDeletedRows(sourceWorksheet, newWorksheet, i, i);
+        newWorkbook.Save();
+        newFileDictionary.Clear();
+        helper.AddIds(newWorksheet, newFileDictionary, Options.Id, Options.HeaderRows);
+        rowCount++;
+    }
+
+                if (!sourceFileDictionary.ContainsKey(modifiedItem) && modifiedItem != "")
                 {
-                    rowNumberInSourceWorksheet++;
-                    rowNumberInNewWorksheet++;
-                    continue;
-                }
-
-                var sourceItem = helper.GetId(sourceWorksheet, rowNumberInSourceWorksheet, Options.Id);
-
-                if (!helper.CheckId(sourceWorksheet, Options.Id, rowNumberInSourceWorksheet) )
-                {
-                    rowNumberInSourceWorksheet++;
-                }
-
-                if (!helper.CheckId(newWorksheet, Options.Id, rowNumberInNewWorksheet))
-                {
-                    if (!modifiedFileHash.Contains(sourceItem) && sourceItem.Length != 0)
-                    {
-                        InsertTheDeletedRows(sourceWorksheet, newWorksheet, rowNumberInSourceWorksheet, rowNumberInNewWorksheet);
-                        newWorkbook.Save();
-
-                        rowNumberInSourceWorksheet++;
-
-                        rowCount++;
-                    }
-
-                    rowNumberInNewWorksheet++;
-                }
-
-                sourceItem = helper.GetId(sourceWorksheet, rowNumberInSourceWorksheet, Options.Id);
-                var newItem = helper.GetId(newWorksheet, rowNumberInNewWorksheet, Options.Id);
-
-                if (!modifiedFileHash.Contains(sourceItem) && sourceItem.Length != 0)
-                {
-                    InsertTheDeletedRows(sourceWorksheet, newWorksheet, rowNumberInSourceWorksheet, rowNumberInNewWorksheet);
+                     newFileDictionary.TryGetValue(modifiedItem, out var newFileRowNumber);
+                    InsertTheAddedRows(sourceWorksheet, newWorksheet, newFileRowNumber);
                     newWorkbook.Save();
-
-                    rowNumberInSourceWorksheet++;
-                    rowNumberInNewWorksheet++;
-                    rowCount++;
                 }
-                else if(!sourceFileHash.Contains(newItem) && newItem != "")
-                {
-                    InsertTheAddedRows(sourceWorksheet, newWorksheet, rowNumberInNewWorksheet);
-                    newWorkbook.Save();
 
-                    rowNumberInNewWorksheet++;
-                    rowCount++;
-                }
-                else if (newItem != "" && sourceItem !="")
-                {
-                    CheckChanges(sourceWorksheet, newWorksheet, rowNumberInSourceWorksheet, rowNumberInNewWorksheet);
-                    newWorkbook.Save();
-
-                    rowNumberInSourceWorksheet++;
-                    rowNumberInNewWorksheet++;
-                }
             }
         }
 
