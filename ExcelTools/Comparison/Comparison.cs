@@ -131,18 +131,16 @@ rowForDeletedRowsList = deletedRows.LastRowUsed().RowNumber() + 1;
 {
     var helper = new ComparisonHelper();
 
-    var rowForDeletedRowsList = 1;
+    var rowForChangedRowsList = 1;
 
     if (changedRows.RowsUsed().Count() != 0)
     {
-        rowForDeletedRowsList = changedRows.LastRowUsed().RowNumber() + 1;
+        rowForChangedRowsList = changedRows.LastRowUsed().RowNumber() + 1;
     }
 
     for (var i = sourceWorksheet.FirstColumnUsed().ColumnNumber(); i <= sourceWorksheet.LastColumnUsed().ColumnNumber(); i++)
     {
         var columnName = sourceWorksheet.Column(i).ColumnLetter();
-
-        changedRows.Cell(rowForDeletedRowsList, i - sourceWorksheet.FirstColumnUsed().ColumnNumber() + 1).Value = sourceWorksheet.Cell(rowNumberInNewWorksheet, i).Value;
 
         if (Options.Id.Contains(columnName))
         {
@@ -151,9 +149,11 @@ rowForDeletedRowsList = deletedRows.LastRowUsed().RowNumber() + 1;
 
                 if (sourceWorksheet.Cell(rowNumberInSourceWorksheet, i).Value.ToString() != newWorksheet.Cell(rowNumberInNewWorksheet,i).Value.ToString())
         {
-            changedRows.Cell(rowForDeletedRowsList, i - sourceWorksheet.FirstColumnUsed().ColumnNumber() + 1).Style.Fill.BackgroundColor = XLColor.Yellow;
-            newWorksheet.Cell(rowNumberInNewWorksheet, i).Style.Fill.BackgroundColor = XLColor.Yellow;
+            var rngData = newWorksheet.Range(rowNumberInNewWorksheet, newWorksheet.Row(rowNumberInNewWorksheet).FirstCellUsed().Address.ColumnNumber, rowNumberInNewWorksheet, newWorksheet.Row(rowNumberInNewWorksheet).LastCellUsed().Address.ColumnNumber);
+            rngData.CopyTo(changedRows.Cell(rowForChangedRowsList, newWorksheet.Row(rowNumberInNewWorksheet).FirstCellUsed().Address.ColumnNumber - newWorksheet.FirstColumnUsed().ColumnNumber() + 1));
 
+
+            newWorksheet.Cell(rowNumberInNewWorksheet, i).Style.Fill.BackgroundColor = XLColor.Yellow;
             helper.InsertCommentInCell(newWorksheet.Cell(rowNumberInNewWorksheet, i), sourceWorksheet.Cell(rowNumberInSourceWorksheet, i).Value.ToString(), newWorksheet.Cell(rowNumberInNewWorksheet, i).Value.ToString());
         }
     }
@@ -176,7 +176,7 @@ protected void InsertTheAddedRows(IXLWorksheet sourceWorksheet, IXLWorksheet new
 
             for (var j = newWorksheet.Row(rowNumberInNewWorksheet).FirstCellUsed().Address.ColumnNumber; j <= newWorksheet.LastColumnUsed().ColumnNumber(); j++)
             {
-                addedRows.Cell(rowForDeletedRowsList, j - sourceWorksheet.FirstColumnUsed().ColumnNumber() + 1).Value = sourceWorksheet.Cell(rowNumberInNewWorksheet, j).Value;
+                addedRows.Cell(rowForDeletedRowsList, j - sourceWorksheet.FirstColumnUsed().ColumnNumber() + 1).Value = newWorksheet.Cell(rowNumberInNewWorksheet, j).Value;
                 addedRows.Cell(rowForDeletedRowsList, j - sourceWorksheet.FirstColumnUsed().ColumnNumber() + 1).Style.Fill.BackgroundColor = XLColor.Green;
 
                 newWorksheet.Cell(rowNumberInNewWorksheet, j).Style.Fill.BackgroundColor = XLColor.Green;
