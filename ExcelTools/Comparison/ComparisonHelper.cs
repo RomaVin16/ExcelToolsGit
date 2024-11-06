@@ -67,7 +67,21 @@ namespace ExcelTools.Comparison
         public void InsertCommentInCell(IXLCell cell, string oldValue, string newValue)
         {
             var comment = cell.CreateComment();
-            comment.AddText($"Исходное значение: {oldValue}, Новое значение: {newValue}");
+
+            if (decimal.TryParse(oldValue, out var oldDecimalValue) && decimal.TryParse(newValue, out var newDecimalValue))
+            {
+                var difference = newDecimalValue - oldDecimalValue;
+
+                var sign = difference >= 0 ? "+ " : "- ";
+
+                var result = $"{sign}{Math.Abs(difference)}";
+
+                comment.AddText(result);
+            }
+else
+            {
+                comment.AddText($"Исходное значение: {oldValue}, \nНовое значение: {newValue}");
+            }
         }
 
 /// <summary>
@@ -84,9 +98,9 @@ public void InsertHeadersInList(IXLWorksheet sourceWorksheet, IXLWorkbook newWor
 
         for (var j = sourceWorksheet.Row(headerRow).FirstCellUsed().Address.ColumnNumber; j <= sourceWorksheet.LastColumnUsed().ColumnNumber(); j++)
         {
-            newWorkbook.Worksheet("Changed").Cell(i, j - sourceWorksheet.FirstColumnUsed().ColumnNumber() + 1).Value = sourceWorksheet.Cell(headerRow, j).Value;
-            newWorkbook.Worksheet("Deleted").Cell(i, j - sourceWorksheet.FirstColumnUsed().ColumnNumber() + 1).Value = sourceWorksheet.Cell(headerRow, j).Value;
-            newWorkbook.Worksheet("Added").Cell(i, j - sourceWorksheet.FirstColumnUsed().ColumnNumber() + 1).Value = sourceWorksheet.Cell(headerRow, j).Value;
+            newWorkbook.Worksheet("Changed").Cell(i, j).Value = sourceWorksheet.Cell(headerRow, j).Value;
+            newWorkbook.Worksheet("Deleted").Cell(i, j).Value = sourceWorksheet.Cell(headerRow, j).Value;
+            newWorkbook.Worksheet("Added").Cell(i, j).Value = sourceWorksheet.Cell(headerRow, j).Value;
                 }
     }
         }

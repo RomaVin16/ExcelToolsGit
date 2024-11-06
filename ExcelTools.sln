@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExcelToolsTests", "ExcelToo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "API", "API\API.csproj", "{6E4ED460-558E-4D9C-BDDC-7C01231CB3B4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "APILib", "APILib\APILib.csproj", "{51639496-DB10-418B-A4F5-EED6DE890D51}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "APILib", "APILib\APILib.csproj", "{51639496-DB10-418B-A4F5-EED6DE890D51}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
