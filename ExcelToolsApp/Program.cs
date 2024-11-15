@@ -17,6 +17,8 @@ namespace ExcelToolsApp
                 SheetNumber = 1,
                 HeaderRows = new[] { 2 }
             });
+
+            Console.WriteLine(result.CountAddedRows);
         }
     }
 }
