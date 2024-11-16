@@ -1,7 +1,4 @@
-﻿using ExcelTools.App;
-using ExcelTools.ColumnSplitter;
-using ExcelTools.Rotate;
-using ExcelTools.Splitter;
+﻿using ExcelTools.Comparison;
 
 namespace ExcelToolsApp
 {
@@ -9,18 +6,19 @@ namespace ExcelToolsApp
     {
         static void Main(string[] args)
         {
+            var comparison = new Comparison();
 
-            var rotater = new Rotater();
-
-            var Result = rotater.Process(new RotaterOptions
+            var result = comparison.Process(new ComparisonOptions
             {
-                FilePath = "rotate.xlsx",
-                ResultFilePath = "new_rotate.xlsx",
+                SourceFilePath = "test7.xlsx",
+                ModifiedFilePath = "test7-changed.xlsx",
+                //Id = new[] { "B" },
+                ResultFilePath = "new_comparison.xlsx",
                 SheetNumber = 1,
-                SkipRows = 0
+                HeaderRows = new[] { 2 }
             });
 
-            //AppHelper.DeleteFolder();
+            Console.WriteLine(result.CountAddedRows);
         }
     }
 }
