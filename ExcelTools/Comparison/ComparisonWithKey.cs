@@ -7,9 +7,10 @@ namespace ExcelTools.Comparison
         private readonly ComparisonOptions _options;
         private readonly ComparisonResult _result;
 
-        public ComparisonWithKey(ComparisonOptions options)
+        public ComparisonWithKey(ComparisonOptions options, ComparisonResult result)
         {
             _options = options;
+            _result = result;
         }
 
         /// <summary>

@@ -48,12 +48,12 @@ newWorkbook.SaveAs(Options.ResultFilePath);
 
 if (Options.Id != null)
 {
-    var comparisonWithKey= new ComparisonWithKey(Options);
+    var comparisonWithKey= new ComparisonWithKey(Options, Result);
     comparisonWithKey.CompareByKey(newWorkbook, sourceWorksheet, newWorksheet);
 }
 else
 {
-    var comparisonDefault = new ComparisonDefault(Options);
+    var comparisonDefault = new ComparisonDefault(Options, Result);
     comparisonDefault.CompareWithoutKey(newWorkbook, sourceWorksheet, newWorksheet);
 }
         }
