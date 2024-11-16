@@ -28,10 +28,6 @@ namespace ExcelTools.Comparison
 
         protected void Compare()
         {
-            var helper = new ComparisonHelper();
-            var sourceFileDictionary = new Dictionary<string, int>();
-            var newFileDictionary = new Dictionary<string, int>();
-
             using var sourceWorkbook = new XLWorkbook(Options.SourceFilePath);
 var sourceWorksheet = sourceWorkbook.Worksheet(Options.SheetNumber);
 
@@ -42,114 +38,25 @@ using var newWorkbook = new XLWorkbook();
 modifiedWorksheet.CopyTo(newWorkbook, modifiedWorksheet.Name);
 var newWorksheet = newWorkbook.Worksheet(1);
 
-            newWorkbook.SaveAs(Options.ResultFilePath);
+newWorkbook.AddWorksheet("Changed");
+newWorkbook.AddWorksheet("Deleted");
+newWorkbook.AddWorksheet("Added");
 
-            helper.AddIds(sourceWorksheet, sourceFileDictionary, Options.Id, Options.HeaderRows);
-helper.AddIds(newWorksheet, newFileDictionary, Options.Id, Options.HeaderRows);
+ComparisonHelper.InsertHeadersInList(sourceWorksheet, newWorkbook, Options.HeaderRows);
 
-var rowCount = Math.Max(sourceWorksheet.RowsUsed().Count(), newWorksheet.RowsUsed().Count());
+newWorkbook.SaveAs(Options.ResultFilePath);
 
-for (var i = sourceWorksheet.FirstRowUsed().RowNumber(); i <= rowCount; i++)
+if (Options.Id != null)
 {
-    if (Options.HeaderRows != null && Options.HeaderRows.Contains(i))
-    {
-        continue;
-    }
-
-                var sourceItem = helper.GetId(sourceWorksheet, i, Options.Id);
-    var modifiedItem = helper.GetId(newWorksheet, i, Options.Id);
-
-    if (newFileDictionary.TryGetValue(sourceItem, out var modifiedItemRowNumber))
-    {
-        CheckChanges(sourceWorksheet, newWorksheet, i, modifiedItemRowNumber);
-        newWorkbook.Save();
-    }
-
-    if (!newFileDictionary.ContainsKey(sourceItem) && sourceItem != "")
-    {
-        InsertTheDeletedRows(sourceWorksheet, newWorksheet, i, i);
-        newWorkbook.Save();
-        newFileDictionary.Clear();
-        helper.AddIds(newWorksheet, newFileDictionary, Options.Id, Options.HeaderRows);
-        rowCount++;
-    }
-
-                if (!sourceFileDictionary.ContainsKey(modifiedItem) && modifiedItem != "")
-                {
-                     newFileDictionary.TryGetValue(modifiedItem, out var newFileRowNumber);
-                    InsertTheAddedRows(sourceWorksheet, newWorksheet, newFileRowNumber);
-                    newWorkbook.Save();
-                }
-
-            }
-        }
-
-/// <summary>
-/// Вставка удаленной строки 
-/// </summary>
-/// <param name="sourceWorksheet"></param>
-/// <param name="newWorksheet"></param>
-/// <param name="rowNumberInSourceWorksheet"></param>
-/// <param name="rowNumberInNewWorksheet"></param>
-        protected void InsertTheDeletedRows(IXLWorksheet sourceWorksheet, IXLWorksheet newWorksheet, int rowNumberInSourceWorksheet, int rowNumberInNewWorksheet)
-        {
-            newWorksheet.Row(rowNumberInNewWorksheet - 1).InsertRowsBelow(1);
-
-            for (var j = sourceWorksheet.Row(rowNumberInSourceWorksheet).FirstCellUsed().Address.ColumnNumber; j <= sourceWorksheet.LastColumnUsed().ColumnNumber(); j++)
-            {
-newWorksheet.Cell(rowNumberInNewWorksheet, j).Value = sourceWorksheet.Cell(rowNumberInSourceWorksheet, j).Value;
-                newWorksheet.Cell(rowNumberInNewWorksheet, j).Style.Fill.BackgroundColor = XLColor.CadmiumRed;
-            }
-
-            var comment = newWorksheet.Row(rowNumberInNewWorksheet).FirstCellUsed().CreateComment();
-            comment.AddText("Это строка была удалена.");
-        }
-
-/// <summary>
-/// Проверка изменений в строке 
-/// </summary>
-/// <param name="sourceWorksheet"></param>
-/// <param name="newWorksheet"></param>
-/// <param name="rowNumberInSourceWorksheet"></param>
-/// <param name="rowNumberInNewWorksheet"></param>
-        protected void CheckChanges(IXLWorksheet sourceWorksheet, IXLWorksheet newWorksheet, int rowNumberInSourceWorksheet, int rowNumberInNewWorksheet)
-{
-    var helper = new ComparisonHelper();
-
-            for (var i = sourceWorksheet.FirstColumnUsed().ColumnNumber(); i <= sourceWorksheet.LastColumnUsed().ColumnNumber(); i++)
-            {
-                var columnName = sourceWorksheet.Column(i).ColumnLetter();
-
-                if (Options.Id.Contains(columnName))
-                {
-                    continue;
-                }
-
-                if (sourceWorksheet.Cell(rowNumberInSourceWorksheet, i).Value.ToString() != newWorksheet.Cell(rowNumberInNewWorksheet,i).Value.ToString())
-                {
-                    newWorksheet.Cell(rowNumberInNewWorksheet, i).Style.Fill.BackgroundColor = XLColor.Yellow;
-
-                    helper.InsertCommentInCell(newWorksheet.Cell(rowNumberInNewWorksheet, i), sourceWorksheet.Cell(rowNumberInSourceWorksheet, i).Value.ToString(), newWorksheet.Cell(rowNumberInNewWorksheet, i).Value.ToString());
-                }
-            }
+    var comparisonWithKey= new ComparisonWithKey(Options);
+    comparisonWithKey.CompareByKey(newWorkbook, sourceWorksheet, newWorksheet);
 }
-
-/// <summary>
-/// Закрашивание добавленных строк 
-/// </summary>
-/// <param name="sourceWorksheet"></param>
-/// <param name="newWorksheet"></param>
-/// <param name="rowNumberInNewWorksheet"></param>
-protected void InsertTheAddedRows(IXLWorksheet sourceWorksheet, IXLWorksheet newWorksheet, int rowNumberInNewWorksheet)
+else
 {
-    for (var j = newWorksheet.Row(rowNumberInNewWorksheet).FirstCellUsed().Address.ColumnNumber; j <= newWorksheet.LastColumnUsed().ColumnNumber(); j++)
-    {
-        newWorksheet.Cell(rowNumberInNewWorksheet, j).Style.Fill.BackgroundColor = XLColor.Green;
-    }
-
-    var comment = newWorksheet.Row(rowNumberInNewWorksheet).FirstCellUsed().CreateComment();
-    comment.AddText("Добавлена новая строка.");
+    var comparisonDefault = new ComparisonDefault(Options);
+    comparisonDefault.CompareWithoutKey(newWorkbook, sourceWorksheet, newWorksheet);
 }
+        }
     }
 }
 
