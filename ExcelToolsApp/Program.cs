@@ -12,13 +12,13 @@ namespace ExcelToolsApp
             {
                 SourceFilePath = "test7.xlsx",
                 ModifiedFilePath = "test7-changed.xlsx",
-                //Id = new[] { "B" },
+                Id = new[] { "A" },
                 ResultFilePath = "new_comparison.xlsx",
                 SheetNumber = 1,
                 HeaderRows = new[] { 2 }
             });
 
-            Console.WriteLine(result.CountAddedRows);
+            Console.WriteLine(result.CountAddedColumns);
         }
     }
 }

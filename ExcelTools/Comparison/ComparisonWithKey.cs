@@ -23,13 +23,28 @@ namespace ExcelTools.Comparison
         /// <param name="newFileDictionary"></param>
         public void CompareByKey(XLWorkbook newWorkbook, IXLWorksheet sourceWorksheet, IXLWorksheet newWorksheet)
         {
-            var sourceFileDictionary = new Dictionary<string, int>();
-            var newFileDictionary = new Dictionary<string, int>();
+            #region 
+            var comparisonColumns = new ComparisonColumns(_options, _result);
 
-            ComparisonHelper.AddIds(sourceWorksheet, sourceFileDictionary, _options.Id, _options.HeaderRows);
-            ComparisonHelper.AddIds(newWorksheet, newFileDictionary, _options.Id, _options.HeaderRows);
+            var sourceFileRowsDictionary = new Dictionary<string, int>();
+            var newFileRowsRowsDictionary = new Dictionary<string, int>();
 
-            var rowCount = Math.Max(sourceWorksheet.RowsUsed().Count(), newWorksheet.RowsUsed().Count());
+            ComparisonHelper.AddIds(sourceWorksheet, sourceFileRowsDictionary, _options.Id, _options.HeaderRows);
+            ComparisonHelper.AddIds(newWorksheet, newFileRowsRowsDictionary, _options.Id, _options.HeaderRows);
+
+            var sourceFileColumnsDictionary = new Dictionary<string, int>();
+            var newFileColumnsDictionary = new Dictionary<string, int>();
+
+            ComparisonHelper.AddColumnsName(sourceWorksheet, sourceFileColumnsDictionary, _options.HeaderRows);
+            ComparisonHelper.AddColumnsName(newWorksheet, newFileColumnsDictionary, _options.HeaderRows);
+            #endregion
+
+            var worksheetSavingColumnsList = comparisonColumns.GetAddedColumnsNumbers(sourceFileColumnsDictionary, newFileColumnsDictionary, newWorksheet);
+            comparisonColumns.CompareHeaders(newWorkbook, sourceWorksheet, newWorksheet);
+
+            var rowCount = Math.Max(sourceWorksheet.RowsUsed().Count(), newWorksheet.RowsUsed().Count()) + _options.HeaderRows.Length;
+
+            var deletedColumnsNumbers = comparisonColumns.GetDeletedColumnNumbers(sourceWorksheet, sourceFileColumnsDictionary, newFileColumnsDictionary);
 
             for (var i = sourceWorksheet.FirstRowUsed().RowNumber(); i <= rowCount; i++)
             {
@@ -41,26 +56,27 @@ namespace ExcelTools.Comparison
                 var sourceItem = ComparisonHelper.GetId(sourceWorksheet, i, _options.Id);
                 var modifiedItem = ComparisonHelper.GetId(newWorksheet, i, _options.Id);
 
-                if (newFileDictionary.TryGetValue(sourceItem, out var modifiedItemRowNumber))
+                if (newFileRowsRowsDictionary.TryGetValue(sourceItem, out var modifiedItemRowNumber))
                 {
-                    ProcessChangedRows(sourceWorksheet, newWorksheet, newWorkbook.Worksheet("Changed"), i, modifiedItemRowNumber);
+                    ProcessChangedRows(sourceWorksheet, newWorksheet, newWorkbook.Worksheet("Changed"), i, modifiedItemRowNumber, worksheetSavingColumnsList, newFileColumnsDictionary);
                     newWorkbook.Save();
                 }
 
-                if (!newFileDictionary.ContainsKey(sourceItem) && sourceItem != "")
+                if (!newFileRowsRowsDictionary.ContainsKey(sourceItem) && sourceItem != "")
                 {
-                    ProcessDeletedRows(sourceWorksheet, newWorksheet, newWorkbook.Worksheet("Deleted"), i, i);
+                    ProcessDeletedRows(sourceWorksheet, newWorksheet, newWorkbook.Worksheet("Deleted"), i, i, worksheetSavingColumnsList, deletedColumnsNumbers);
                     newWorkbook.Save();
 
-                    newFileDictionary.Clear();
-                    ComparisonHelper.AddIds(newWorksheet, newFileDictionary, _options.Id, _options.HeaderRows);
+                    newFileRowsRowsDictionary.Clear();
+                    ComparisonHelper.AddIds(newWorksheet, newFileRowsRowsDictionary, _options.Id, _options.HeaderRows);
                     rowCount++;
                 }
 
-                if (!sourceFileDictionary.ContainsKey(modifiedItem) && modifiedItem != "")
+                if (!sourceFileRowsDictionary.ContainsKey(modifiedItem) && modifiedItem != "")
                 {
-                    newFileDictionary.TryGetValue(modifiedItem, out var newFileRowNumber);
+                    newFileRowsRowsDictionary.TryGetValue(modifiedItem, out var newFileRowNumber);
                     ProcessAddedRows(sourceWorksheet, newWorksheet, newWorkbook.Worksheet("Added"), newFileRowNumber);
+                    
                     newWorkbook.Save();
                 }
             }
@@ -71,9 +87,11 @@ namespace ExcelTools.Comparison
         /// </summary>
         /// <param name="sourceWorksheet"></param>
         /// <param name="newWorksheet"></param>
+        /// <param name="deletedRows"></param>
         /// <param name="rowNumberInSourceWorksheet"></param>
         /// <param name="rowNumberInNewWorksheet"></param>
-        protected void ProcessDeletedRows(IXLWorksheet sourceWorksheet, IXLWorksheet newWorksheet, IXLWorksheet deletedRows, int rowNumberInSourceWorksheet, int rowNumberInNewWorksheet)
+        /// <param name="worksheetSavingColumnsList"></param>
+        protected void ProcessDeletedRows(IXLWorksheet sourceWorksheet, IXLWorksheet newWorksheet, IXLWorksheet deletedRows, int rowNumberInSourceWorksheet, int rowNumberInNewWorksheet, List<int> worksheetSavingColumnsList, List<int> deletedColumnsNumbers)
         {
             newWorksheet.Row(rowNumberInNewWorksheet - 1).InsertRowsBelow(1);
 
@@ -84,13 +102,34 @@ namespace ExcelTools.Comparison
                 rowForDeletedRowsList = deletedRows.LastRowUsed().RowNumber() + 1;
             }
 
-            for (var j = sourceWorksheet.Row(rowNumberInSourceWorksheet).FirstCellUsed().Address.ColumnNumber; j <= sourceWorksheet.LastColumnUsed().ColumnNumber(); j++)
-            {
-                deletedRows.Cell(rowForDeletedRowsList, j).Value = sourceWorksheet.Cell(rowNumberInSourceWorksheet, j).Value;
-                deletedRows.Cell(rowForDeletedRowsList, j).Style.Fill.BackgroundColor = XLColor.FromArgb(unchecked((int)0xFFFF0000));
+            var cellsCount = sourceWorksheet.LastColumnUsed().ColumnNumber();
 
-                newWorksheet.Cell(rowNumberInNewWorksheet, j).Value = sourceWorksheet.Cell(rowNumberInSourceWorksheet, j).Value;
-                newWorksheet.Cell(rowNumberInNewWorksheet, j).Style.Fill.BackgroundColor = XLColor.FromArgb(unchecked((int)0xFFFF0000));
+            var columnNumberInSourceWorksheet = sourceWorksheet.FirstColumnUsed().ColumnNumber();
+            var columnNumberInNewWorksheet = sourceWorksheet.FirstColumnUsed().ColumnNumber();
+
+
+            for (var j = sourceWorksheet.Row(rowNumberInSourceWorksheet).FirstCellUsed().Address.ColumnNumber; j <= cellsCount; j++)
+            {
+                if (worksheetSavingColumnsList.Contains(columnNumberInNewWorksheet))
+                {
+                    columnNumberInNewWorksheet++;
+                }
+
+                if (deletedColumnsNumbers.Contains(columnNumberInSourceWorksheet))
+                {
+                    columnNumberInSourceWorksheet++;
+                    cellsCount--;
+                }
+
+
+                deletedRows.Cell(rowForDeletedRowsList, columnNumberInNewWorksheet).Value = sourceWorksheet.Cell(rowNumberInSourceWorksheet, columnNumberInSourceWorksheet).Value;
+                deletedRows.Cell(rowForDeletedRowsList, columnNumberInNewWorksheet).Style.Fill.BackgroundColor = XLColor.FromArgb(unchecked((int)0xFFFF0000));
+
+                newWorksheet.Cell(rowNumberInNewWorksheet, columnNumberInNewWorksheet).Value = sourceWorksheet.Cell(rowNumberInSourceWorksheet, columnNumberInSourceWorksheet).Value;
+                newWorksheet.Cell(rowNumberInNewWorksheet, columnNumberInNewWorksheet).Style.Fill.BackgroundColor = XLColor.FromArgb(unchecked((int)0xFFFF0000));
+
+                columnNumberInSourceWorksheet++;
+                columnNumberInNewWorksheet++;
             }
 
             var comment = newWorksheet.Row(rowNumberInNewWorksheet).FirstCellUsed().CreateComment();
@@ -104,9 +143,11 @@ namespace ExcelTools.Comparison
         /// </summary>
         /// <param name="sourceWorksheet"></param>
         /// <param name="newWorksheet"></param>
+        /// <param name="changedRows"></param>
         /// <param name="rowNumberInSourceWorksheet"></param>
         /// <param name="rowNumberInNewWorksheet"></param>
-        protected void ProcessChangedRows(IXLWorksheet sourceWorksheet, IXLWorksheet newWorksheet, IXLWorksheet changedRows, int rowNumberInSourceWorksheet, int rowNumberInNewWorksheet)
+        /// <param name="worksheetSavingColumnsList"></param>
+        protected void ProcessChangedRows(IXLWorksheet sourceWorksheet, IXLWorksheet newWorksheet, IXLWorksheet changedRows, int rowNumberInSourceWorksheet, int rowNumberInNewWorksheet, List<int> worksheetSavingColumnsList, Dictionary<string, int> newFileColumnsDictionary)
         {
             var rowForChangedRowsList = 1;
             var isChangedRows = false;
@@ -116,25 +157,39 @@ namespace ExcelTools.Comparison
                 rowForChangedRowsList = changedRows.LastRowUsed().RowNumber() + 1;
             }
 
-            for (var i = sourceWorksheet.FirstColumnUsed().ColumnNumber(); i <= sourceWorksheet.LastColumnUsed().ColumnNumber(); i++)
-            {
-                var columnName = sourceWorksheet.Column(i).ColumnLetter();
+            var cellsCount = sourceWorksheet.LastColumnUsed().ColumnNumber();
 
-                if (_options.Id.Contains(columnName))
+            var columnNumberInSourceWorksheet = sourceWorksheet.FirstColumnUsed().ColumnNumber();
+            var columnNumberInNewWorksheet = sourceWorksheet.FirstColumnUsed().ColumnNumber();
+
+            for (var i = sourceWorksheet.FirstColumnUsed().ColumnNumber(); i <= cellsCount; i++)
+            {
+                var sourceColumn = ComparisonHelper.GetColumnConcatenation(sourceWorksheet, _options.HeaderRows, columnNumberInSourceWorksheet);
+
+                if (worksheetSavingColumnsList.Contains(columnNumberInNewWorksheet)) //Является ли столбец добавленным
                 {
-                    continue;
+                    columnNumberInNewWorksheet++;
+                    cellsCount++;
                 }
 
-                if (sourceWorksheet.Cell(rowNumberInSourceWorksheet, i).Value.ToString() != newWorksheet.Cell(rowNumberInNewWorksheet, i).Value.ToString())
+                if (!newFileColumnsDictionary.ContainsKey(sourceColumn)) //Является ли столбец удаленным 
+                {
+                    columnNumberInSourceWorksheet++;
+                }
+
+                if (sourceWorksheet.Cell(rowNumberInSourceWorksheet, columnNumberInSourceWorksheet).Value.ToString() != newWorksheet.Cell(rowNumberInNewWorksheet, columnNumberInNewWorksheet).Value.ToString())
                 {
 
-                    newWorksheet.Cell(rowNumberInNewWorksheet, i).Style.Fill.BackgroundColor = XLColor.FromArgb(unchecked((int)0xFFFFFF00));
-                    ComparisonHelper.InsertCommentInCell(newWorksheet.Cell(rowNumberInNewWorksheet, i), sourceWorksheet.Cell(rowNumberInSourceWorksheet, i).Value.ToString(), newWorksheet.Cell(rowNumberInNewWorksheet, i).Value.ToString());
+                    newWorksheet.Cell(rowNumberInNewWorksheet, columnNumberInNewWorksheet).Style.Fill.BackgroundColor = XLColor.FromArgb(unchecked((int)0xFFFFFF00));
+                    ComparisonHelper.InsertCommentInCell(newWorksheet.Cell(rowNumberInNewWorksheet, columnNumberInNewWorksheet), sourceWorksheet.Cell(rowNumberInSourceWorksheet, columnNumberInSourceWorksheet).Value.ToString(), newWorksheet.Cell(rowNumberInNewWorksheet, columnNumberInNewWorksheet).Value.ToString());
 
                     _result.CountChangedRows++;
 
                     isChangedRows = true;
                 }
+
+                columnNumberInSourceWorksheet++;
+                columnNumberInNewWorksheet++;
             }
 
             if (isChangedRows)

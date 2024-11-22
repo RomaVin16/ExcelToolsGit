@@ -42,7 +42,7 @@ newWorkbook.AddWorksheet("Changed");
 newWorkbook.AddWorksheet("Deleted");
 newWorkbook.AddWorksheet("Added");
 
-ComparisonHelper.InsertHeadersInList(sourceWorksheet, newWorkbook, Options.HeaderRows);
+ComparisonHelper.InsertHeadersInList(newWorksheet, newWorkbook, Options.HeaderRows);
 
 newWorkbook.SaveAs(Options.ResultFilePath);
 
