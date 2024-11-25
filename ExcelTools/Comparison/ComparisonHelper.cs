@@ -21,7 +21,7 @@ namespace ExcelTools.Comparison
             {
                 var cellValue = worksheet.Cell(intRowNumber, columnName).GetValue<string>();
 
-                    result.Append(cellValue);
+                result.Append(cellValue);
             }
 
             return result.ToString();
@@ -56,6 +56,20 @@ namespace ExcelTools.Comparison
         }
 
         /// <summary>
+        /// Добавление названий столбцов-заголовков в словарь 
+        /// </summary>
+        /// <param name="worksheet"></param>
+        /// <param name="dictionary"></param>
+        /// <param name="headers"></param>
+        public static void AddColumnsName(IXLWorksheet worksheet, Dictionary<string, int> dictionary, int[] headers)
+        {
+            for (var i = worksheet.FirstColumnUsed().ColumnNumber(); i <= worksheet.LastColumnUsed().ColumnNumber(); i++)
+            {
+                dictionary.Add(GetColumnConcatenation(worksheet, headers, i), i);
+            }
+        }
+
+        /// <summary>
         /// Проверка ID
         /// </summary>
         /// <param name="worksheet"></param>
@@ -64,7 +78,8 @@ namespace ExcelTools.Comparison
         /// <returns></returns>
         public static bool CheckId(IXLWorksheet worksheet, string[] idStrings, int rowNumber)
         {
-            return idStrings.Select(columnName => worksheet.Cell(rowNumber, columnName).GetValue<string>()).All(cellValue => cellValue != "");
+            return idStrings.Select(columnName => worksheet.Cell(rowNumber, columnName).GetValue<string>())
+                .All(cellValue => cellValue != "");
         }
 
         /// <summary>
@@ -77,7 +92,8 @@ namespace ExcelTools.Comparison
         {
             var comment = cell.CreateComment();
 
-            if (decimal.TryParse(oldValue, out var oldDecimalValue) && decimal.TryParse(newValue, out var newDecimalValue))
+            if (decimal.TryParse(oldValue, out var oldDecimalValue) &&
+                decimal.TryParse(newValue, out var newDecimalValue))
             {
                 var difference = newDecimalValue - oldDecimalValue;
 
@@ -87,31 +103,52 @@ namespace ExcelTools.Comparison
 
                 comment.AddText(result);
             }
-else
+            else
             {
                 comment.AddText($"Исходное значение: {oldValue}, \nНовое значение: {newValue}");
             }
         }
 
-/// <summary>
-/// Добавление заголовков в листы 
-/// </summary>
-/// <param name="sourceWorksheet"></param>
-/// <param name="newWorkbook"></param>
-/// <param name="headers"></param>
-public static void InsertHeadersInList(IXLWorksheet sourceWorksheet, IXLWorkbook newWorkbook, int[] headers)
-{
-    for (var i = 1; i <= headers.Length; i++) 
-    {
-        var headerRow = headers[i - 1];
-
-        for (var j = sourceWorksheet.Row(headerRow).FirstCellUsed().Address.ColumnNumber; j <= sourceWorksheet.LastColumnUsed().ColumnNumber(); j++)
+        /// <summary>
+        /// Добавление заголовков в листы 
+        /// </summary>
+        /// <param name="sourceWorksheet"></param>
+        /// <param name="newWorkbook"></param>
+        /// <param name="headers"></param>
+        public static void InsertHeadersInList(IXLWorksheet sourceWorksheet, IXLWorkbook newWorkbook, int[] headers)
         {
-            newWorkbook.Worksheet("Changed").Cell(i, j).Value = sourceWorksheet.Cell(headerRow, j).Value;
-            newWorkbook.Worksheet("Deleted").Cell(i, j).Value = sourceWorksheet.Cell(headerRow, j).Value;
-            newWorkbook.Worksheet("Added").Cell(i, j).Value = sourceWorksheet.Cell(headerRow, j).Value;
+            for (var i = 1; i <= headers.Length; i++)
+            {
+                var headerRow = headers[i - 1];
+
+                for (var j = sourceWorksheet.Row(headerRow).FirstCellUsed().Address.ColumnNumber;
+                     j <= sourceWorksheet.LastColumnUsed().ColumnNumber();
+                     j++)
+                {
+                    newWorkbook.Worksheet("Changed").Cell(i, j).Value = sourceWorksheet.Cell(headerRow, j).Value;
+                    newWorkbook.Worksheet("Deleted").Cell(i, j).Value = sourceWorksheet.Cell(headerRow, j).Value;
+                    newWorkbook.Worksheet("Added").Cell(i, j).Value = sourceWorksheet.Cell(headerRow, j).Value;
                 }
-    }
+            }
+        }
+
+        /// <summary>
+        /// Получение конкатенации заголовков 
+        /// </summary>
+        /// <param name="headers"></param>
+        /// <param name="columnNumber"></param>
+        /// <returns></returns>
+        public static string GetColumnConcatenation(IXLWorksheet worksheet, int[] headers, int columnNumber)
+        {
+            var str = new StringBuilder();
+
+            foreach (var header in headers)
+            {
+                str.Append($"_{worksheet.Cell(header, columnNumber).Value}");
+            }
+
+            return str.ToString();
         }
     }
 }
+
