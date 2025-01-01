@@ -1,24 +1,19 @@
-﻿using ExcelTools.Comparison;
+﻿using ExcelTools.Converter;
 
 namespace ExcelToolsApp
 {
     public class Program
     {
-        static void Main(string[] args)
+        static void Main()
         {
-            var comparison = new Comparison();
+            var converter = new JsonToExcelConverter();
 
-            var result = comparison.Process(new ComparisonOptions
+            var result = converter.Process(new JsonToExcelConverterOptions
             {
-                SourceFilePath = "test7.xlsx",
-                ModifiedFilePath = "test7-changed.xlsx",
-                Id = new[] { "A" },
-                ResultFilePath = "new_comparison.xlsx",
-                SheetNumber = 1,
-                HeaderRows = new[] { 2 }
+                FilePath = "testJson4.json",
+                ResultFilePath = "new_converter.xlsx"
             });
-
-            Console.WriteLine(result.CountAddedColumns);
         }
     }
 }
+
