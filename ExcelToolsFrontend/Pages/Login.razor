@@ -1,0 +1,206 @@
+﻿@page "/login"
+@using ExcelToolsFrontend.Models
+@using ExcelToolsFrontend.DTOs
+@using System.Net.Http.Headers
+@using ExcelToolsFrontend.Auth
+@using Blazored.LocalStorage
+@inject NavigationManager Navigation
+@inject HttpClient Http
+@inject IJSRuntime JsRuntime
+@inject CustomAuthStateProvider AuthProvider
+@inject ILocalStorageService LocalStorage
+
+
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <img src="profile-icon.png" class="auth-logo" alt="Логотип" />
+            <h3 class="auth-title">Добро пожаловать!</h3>
+        </div>
+
+        <!-- Шаг 1: Ввод телефона -->
+        @if (!codeSent)
+        {
+	        <EditForm Model="@otpModel" OnValidSubmit="@HandleSendOtp">
+		        <DataAnnotationsValidator />
+
+		        <div class="form-group animate-fade-in">
+			        <label class="input-label">
+				        Номер телефона
+				        <InputText @ref="phoneInputRef"
+				                   @bind-Value="otpModel.PhoneNumber"
+				                   class="modern-input"
+				                   placeholder="+7 (999) 999-99-99" />
+			        </label>
+			        <ValidationMessage For="@(() => otpModel.PhoneNumber)" />
+
+			        <!-- кнопка перенесена внутрь той же группы -->
+			        <button type="submit" class="modern-button" disabled="@isSending" style="margin-top: 1rem;">
+				        @if (isSending)
+				        {
+					        <span class="button-loader"></span>
+				        }
+				        else
+				        {
+					        <span>Получить код</span>
+				        }
+			        </button>
+		        </div>
+	        </EditForm>
+
+        }
+
+        <!-- Шаг 2: Ввод кода -->
+        @if (codeSent)
+        {
+	        <EditForm Model="@verifyModel" OnValidSubmit="@HandleVerifyOtp">
+		        <DataAnnotationsValidator />
+		        <div class="form-group animate-fade-in">
+			        <p class="code-sent-info">
+				        Код отправлен на номер<br />
+				        <strong>@otpModel.PhoneNumber</strong>
+			        </p>
+
+			        <label class="input-label">
+				        Введите код из SMS
+				        <InputText @bind-Value="verifyModel.Code"
+				                   maxlength="6"
+				                   class="modern-input code-inline-input"
+				                   placeholder="••••••" />
+			        </label>
+
+			        <ValidationMessage For="@(() => verifyModel.Code)" />
+		        </div>
+
+		        <div class="actions-group">
+			        <button type="button" class="modern-button ghost" @onclick="@ResetForm">
+				        Изменить номер
+			        </button>
+			        <button type="submit" class="modern-button" disabled="@isVerifying">
+				        @if (isVerifying)
+				        {
+					        <span class="button-loader"></span>
+				        }
+				        else
+				        {
+					        <span>Продолжить</span>
+				        }
+			        </button>
+		        </div>
+	        </EditForm>
+        }
+
+        @if (errorMessage != null)
+        {
+            <div class="error-message animate-shake">
+                @errorMessage
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    // Модели
+    private OtpSendModel otpModel = new();
+    private OtpVerifyModel verifyModel = new();
+
+    // Состояние компонента
+    private bool codeSent = false;
+    private bool isSending = false;
+    private bool isVerifying = false;
+    private string? errorMessage;
+    private InputText phoneInputRef;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !codeSent)
+        {
+            await JsRuntime.InvokeVoidAsync("initPhoneMask", phoneInputRef);
+        }
+    }
+
+    /// <summary>
+    /// Отправка кода  
+    /// </summary>
+    /// <returns></returns>
+    private async Task HandleSendOtp()
+    {
+        try
+        {
+            isSending = true;
+            errorMessage = null;
+            
+            var response = await Http.PostAsJsonAsync("api/auth/send-otp", otpModel.PhoneNumber);
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                errorMessage = await GetErrorMessage(response);
+                return;
+            }
+
+            codeSent = true;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Ошибка: {ex.Message}";
+        }
+        finally
+        {
+            isSending = false;
+        }
+    }
+
+	private async Task HandleVerifyOtp()
+	{
+		try
+		{
+			isVerifying = true;
+			errorMessage = null;
+
+			var dto = new VerifyOtpDto 
+			{ 
+				PhoneNumber = otpModel.PhoneNumber, 
+				Code = verifyModel.Code
+			};
+
+			var response = await Http.PostAsJsonAsync("api/auth/verify-otp", dto);
+    
+			if (response.IsSuccessStatusCode)
+			{
+				var result = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
+				await AuthProvider.MarkUserAsAuthenticated(result.Token);
+				Navigation.NavigateTo("/", forceLoad: true);
+			}
+			else
+			{
+				errorMessage = await GetErrorMessage(response);
+			}
+		}
+		catch (Exception ex)
+		{
+			errorMessage = $"Ошибка: {ex.Message}";
+		}
+		finally
+		{
+			isVerifying = false;
+		}
+	}
+
+    private void ResetForm()
+    {
+        codeSent = false;
+        errorMessage = null;
+    }
+
+    private async Task<string> GetErrorMessage(HttpResponseMessage response)
+    {
+        try
+        {
+            return await response.Content.ReadAsStringAsync();
+        }
+        catch
+        {
+            return "Произошла неизвестная ошибка";
+        }
+    }
+    }

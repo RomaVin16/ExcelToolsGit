@@ -1,0 +1,112 @@
+﻿@page "/counter"
+@using ExcelToolsFrontend.Models
+@using System.Net.Http.Headers
+@using Blazored.LocalStorage
+@using ExcelToolsFrontend.Auth
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject ILocalStorageService _localStorage
+@inject CustomAuthStateProvider AuthProvider
+
+<PageTitle>История операций</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-10">
+    <MudText Typo="Typo.h4" Class="mb-6">История операций</MudText>
+
+    @if (isLoading)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Class="mx-auto" />
+    }
+    else if (processedFileHistory == null || !processedFileHistory.Any())
+    {
+        <MudAlert Severity="Severity.Info">История операций пуста</MudAlert>
+    }
+    else
+    {
+        <MudPaper Elevation="3" Class="pa-4">
+            <MudTable Items="@processedFileHistory" Hover="true" Breakpoint="Breakpoint.None">
+                <HeaderContent>
+                    <MudTh>Дата</MudTh>
+                    <MudTh>Операция</MudTh>
+                    <MudTh>Файл</MudTh>
+                    <MudTh>Статус</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Дата">@context.ProcessedAt.ToString("dd.MM.yyyy HH:mm")</MudTd>
+                    <MudTd DataLabel="Операция">@context.Operation</MudTd>
+                    <MudTd DataLabel="Файл">@context.FileId</MudTd>
+				</RowTemplate>
+            </MudTable>
+        </MudPaper>
+        
+        @if (totalPages > 1)
+        {
+            <MudPagination Count="@totalPages" Selected="@currentPage" SelectedChanged="OnPageChanged" BoundaryCount="2" Class="mt-4" />
+        }
+    }
+</MudContainer>
+
+@code {
+    private List<ProcessedFileHistory> processedFileHistory = new();
+    private bool isLoading = true;
+    private int currentPage = 1;
+    private int totalPages = 1;
+    private const int PageSize = 10;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        if (!authState.User.Identity.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        var token = await _localStorage.GetItemAsync<string>("authToken");
+        if (!string.IsNullOrEmpty(token))
+        {
+            Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            await LoadHistory();
+        }
+    }
+
+    private async Task LoadHistory()
+    {
+        isLoading = true;
+        StateHasChanged(); 
+
+        try
+        {
+	        var response = await Http.GetAsync("api/user/history");
+
+	        if (response.IsSuccessStatusCode)
+	        {
+		        processedFileHistory = await response.Content.ReadFromJsonAsync<List<ProcessedFileHistory>>() ?? new List<ProcessedFileHistory>();
+	        }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Ошибка при загрузке истории: {ex.Message}");
+   
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnPageChanged(int page)
+    {
+        currentPage = page;
+        await LoadHistory();
+    }
+
+	// Модель для пагинации
+    public class PagedResponse<T>
+    {
+        public List<T> Items { get; set; } = new();
+        public int TotalPages { get; set; }
+    }
+}

@@ -15,7 +15,6 @@ namespace APILib.Contracts
         Guid Split(SplitterAPIOptions options);
         Guid SplitColumn(ColumnSplitterAPIOptions options);
         Guid Rotate(RotaterAPIOptions options);
-        string GetMime(string fileName);
-
+        //string GetMime(string fileName);
     }
 }

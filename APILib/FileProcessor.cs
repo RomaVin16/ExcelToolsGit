@@ -1,20 +1,20 @@
-﻿
-using API.Models;
-using APILib;
+﻿using API.Models;
 using APILib.Contracts;
+using APILib.Repository;
+using APILib.Services;
 using Microsoft.Extensions.Configuration;
 
-namespace ExcelTools
+namespace APILib
 {
     public class FileProcessor: IFileProcessor
     {
         private readonly FileService service;
-        private readonly FileRepository fileRepository;
+        private readonly RepositoryContext fileRepository;
         private readonly IArchiveService archiveService;
 
         public FileProcessor(IConfiguration configuration)
         {
-            fileRepository = new FileRepository(configuration);
+            fileRepository = new RepositoryContext(configuration);
             service = new FileService(configuration, fileRepository, archiveService);
         }
 
@@ -28,7 +28,7 @@ namespace ExcelTools
 
             await stream.CopyToAsync(fileStream);
 
-            await fileRepository.Create(stream, fileId, fileName);
+            await fileRepository.Create(stream, fileId, fileName, "Upload");
 
             return fileId;
         }
