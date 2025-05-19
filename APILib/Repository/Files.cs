@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace APILib.Repository
 {
@@ -10,11 +6,15 @@ namespace APILib.Repository
     {
         public Guid Id { get; set; }
         public string FileName { get; set; }
-        public DateTime SaveDate { get; set; }
+
+		public DateTime SaveDate { get; set; }
         public FileState State { get; set; }
         public long SizeBytes { get; set; }
 
-        public enum FileState
+        [Column("operation")]
+        public string Operation { get; set; }
+
+		public enum FileState
         {
             Active,
             Removed

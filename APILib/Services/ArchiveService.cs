@@ -1,7 +1,7 @@
 ﻿using System.IO.Compression;
 using APILib.Contracts;
 
-namespace APILib
+namespace APILib.Services
 {
     public class ArchiveService : IArchiveService
     {

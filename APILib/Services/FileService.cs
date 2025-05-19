@@ -4,25 +4,23 @@ using ExcelTools.ColumnSplitter;
 using ExcelTools.DuplicateRemover;
 using ExcelTools.Merger;
 using ExcelTools.Splitter;
-using Microsoft.AspNetCore.StaticFiles;
 using APILib.APIOptions;
 using FileResult = API.Models.FileResult;
 using APILib.Contracts;
 using ExcelTools.Rotate;
 
-
-namespace APILib
+namespace APILib.Services
 {
-    public class FileService: IFileService
+    public class FileService : IFileService
     {
         private readonly string rootPath;
-        private readonly IFileRepository _fileRepository;
+        private readonly IRepositoryContext _repositoryContext;
         private readonly IArchiveService _archiveService;
 
-        public FileService(IConfiguration configuration, IFileRepository fileRepository, IArchiveService archiveService)
+        public FileService(IConfiguration configuration, IRepositoryContext repositoryContext, IArchiveService archiveService)
         {
             rootPath = configuration["FileStorage:RootPath"];
-            _fileRepository = fileRepository;
+            _repositoryContext = repositoryContext;
             _archiveService = archiveService;
         }
 
@@ -54,6 +52,7 @@ namespace APILib
             var folderName = fileId.ToString();
             var subfolder1 = folderName.Substring(0, 2);
             var subfolder2 = folderName.Substring(2, 2);
+
             var folderPath = Path.Combine(rootPath, subfolder1, subfolder2, folderName);
 
             return folderPath;
@@ -69,7 +68,7 @@ namespace APILib
         {
             var result = new FileResult();
 
-            var fileName = _fileRepository.GetFileName(fileId);
+            var fileName = _repositoryContext.GetFileName(fileId);
 
             var filePath = GetFolder(fileId);
 
@@ -85,7 +84,7 @@ namespace APILib
         {
             var (resultFileId, resultFolderId) = CreateFolder();
 
- return Path.Combine(resultFolderId, $"file_part{fileNumber}.xlsx");
+            return Path.Combine(resultFolderId, $"file_part{fileNumber}.xlsx");
         }
 
         public Guid Clean(CleanerAPIOptions options)
@@ -93,7 +92,7 @@ namespace APILib
             var cleaner = new Cleaner();
             var fileResult = new FileResult
             {
-                FileName = _fileRepository.GetFileName(options.FileId)
+                FileName = _repositoryContext.GetFileName(options.FileId)
             };
 
             var (resultFileId, resultFolderId) = CreateFolder();
@@ -109,9 +108,9 @@ namespace APILib
             var filePath = Path.Combine(resultFolderId, fileResult.FileName);
             var stream = File.OpenRead(filePath);
 
-            _fileRepository.Create(stream, resultFileId, fileResult.FileName);
+            _repositoryContext.Create(stream, resultFileId, fileResult.FileName, "Clean");
 
-            return resultFileId;
+			return resultFileId;
         }
 
         public Guid DuplicateRemove(DuplicateRemoverAPIOptions options)
@@ -119,7 +118,7 @@ namespace APILib
             var duplicateRemover = new DuplicateRemover();
             var fileResult = new FileResult();
 
-            fileResult.FileName = _fileRepository.GetFileName(options.FileId);
+            fileResult.FileName = _repositoryContext.GetFileName(options.FileId);
 
             var (resultFileId, resultFolderId) = CreateFolder();
 
@@ -135,7 +134,7 @@ namespace APILib
             var filePath = Path.Combine(resultFolderId, fileResult.FileName);
             var stream = File.OpenRead(filePath);
 
-            _fileRepository.Create(stream, resultFileId, fileResult.FileName);
+            _repositoryContext.Create(stream, resultFileId, fileResult.FileName, "DuplicateRemove");
 
             return resultFileId;
         }
@@ -143,12 +142,12 @@ namespace APILib
         public Guid Merge(MergerAPIOptions options)
         {
             var merger = new Merger();
-            var fileResult = new FileResult();
+
             var array = new string[options.MergeFilePaths.Length];
 
             for (var i = 0; i < options.MergeFilePaths.Length; i++)
             {
-                var fileName = _fileRepository.GetFileName(options.MergeFilePaths[i]);
+                var fileName = _repositoryContext.GetFileName(options.MergeFilePaths[i]);
 
                 array[i] = Path.Combine(GetFolder(options.MergeFilePaths[i]), fileName);
             }
@@ -164,10 +163,12 @@ namespace APILib
                 MergeMode = (MergerOptions.MergeType)options.MergeMode
             });
 
-            var filePath = Path.Combine(resultFolderId, fileResult.FileName);
+            //var fileResult = Get(resultFileId);
+
+            var filePath = Path.Combine(resultFolderId, "merge_result.xlsx");
             var stream = File.OpenRead(filePath);
 
-            _fileRepository.Create(stream, resultFileId, fileResult.FileName);
+            _repositoryContext.Create(stream, resultFileId, "merge_result.xlsx", "Merge");
 
             return resultFileId;
         }
@@ -175,9 +176,10 @@ namespace APILib
         public Guid Split(SplitterAPIOptions options)
         {
             var splitter = new Splitter();
+
             var fileResult = new FileResult
             {
-                FileName = _fileRepository.GetFileName(options.FileId)
+                FileName = _repositoryContext.GetFileName(options.FileId)
             };
 
             var baseFileName = Path.GetFileNameWithoutExtension(fileResult.FileName);
@@ -210,13 +212,13 @@ namespace APILib
 
                 var stream = File.OpenRead(tempZipPath);
 
-                _fileRepository.Create(stream, resultZipId, $"{baseFileName}_results.zip");
+                _repositoryContext.Create(stream, resultZipId, $"{baseFileName}_results.zip", "Split");
 
                 Directory.Delete(tempFolderPath, true);
             }
             else
             {
-//Здесь должна быть логика обработки файлов через делегаты
+                //Здесь должна быть логика обработки файлов через делегаты
             }
 
 
@@ -228,25 +230,26 @@ namespace APILib
             var columnSplitter = new ColumnSplitter();
             var fileResult = new FileResult
             {
-                FileName = _fileRepository.GetFileName(options.FileId),
+                FileName = _repositoryContext.GetFileName(options.FileId),
             };
 
             var (resultFileId, resultFolderId) = CreateFolder();
 
             var result = columnSplitter.Process(new ColumnSplitterOptions
             {
-FilePath = Path.Combine(GetFolder(options.FileId), fileResult.FileName),
-ResultFilePath = Path.Combine(resultFolderId, fileResult.FileName),
+                FilePath = Path.Combine(GetFolder(options.FileId), fileResult.FileName),
+                ResultFilePath = Path.Combine(resultFolderId, fileResult.FileName),
                 SplitSymbols = options.SplitSymbols,
                 ColumnName = options.ColumnName,
-                SkipHeaderRows = options.SkipHeaderRows,
-                SkipRows = options.SkipHeaderRows
+                SkipHeaderRows = options.AddHeaderRows,
+                SkipRows = options.AddHeaderRows
             });
 
             var filePath = Path.Combine(resultFolderId, fileResult.FileName);
+
             var stream = File.OpenRead(filePath);
 
-            _fileRepository.Create(stream, resultFileId, fileResult.FileName);
+            _repositoryContext.Create(stream, resultFileId, fileResult.FileName, "SplitColumn");
 
             return resultFileId;
         }
@@ -256,7 +259,7 @@ ResultFilePath = Path.Combine(resultFolderId, fileResult.FileName),
             var rotater = new Rotater();
             var fileResult = new FileResult
             {
-                FileName = _fileRepository.GetFileName(options.FileId)
+                FileName = _repositoryContext.GetFileName(options.FileId)
             };
 
             var (resultFileId, resultFolderId) = CreateFolder();
@@ -272,22 +275,21 @@ ResultFilePath = Path.Combine(resultFolderId, fileResult.FileName),
             var filePath = Path.Combine(resultFolderId, fileResult.FileName);
             var stream = File.OpenRead(filePath);
 
-            _fileRepository.Create(stream, resultFileId, fileResult.FileName);
+            _repositoryContext.Create(stream, resultFileId, fileResult.FileName, "Rotate");
 
             return resultFileId;
         }
 
-        public string GetMime(string fileName)
-        {
-            var provider = new FileExtensionContentTypeProvider();
+        //public string GetMime(string fileName)
+        //{
+        //    var provider = new FileExtensionContentTypeProvider();
 
-            if (!provider.TryGetContentType(fileName, out var contentType))
-            {
-                contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-            }
+        //    if (!provider.TryGetContentType(fileName, out var contentType))
+        //    {
+        //        contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+        //    }
 
-            return contentType;
-        }
+        //    return contentType;
+        //}
     }
 }
-    

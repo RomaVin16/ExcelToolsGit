@@ -1,0 +1,410 @@
+﻿@page "/"
+@using System.Text.Json
+@using global::APILib.APIOptions
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@using System.Net.Http.Headers
+@using Blazored.LocalStorage
+@using ExcelToolsFrontend.Auth
+@using System.Net
+@inject ILocalStorageService _localStorage
+
+<div class="profile-button-wrapper">
+	<AuthorizeView>
+		<Authorized>
+			<div class="profile-dropdown">
+				<button class="profile-btn" @onclick="ToggleProfile">
+					<img src="profile-icon.png" alt="Профиль" class="profile-icon" />
+				</button>
+
+				<div class="dropdown-content" style="@(isProfileOpen ? "display: block;" : "display: none;")">
+					<div class="dropdown-header">
+						<div>
+							<strong>@context.User.FindFirst("unique_name")?.Value</strong>
+							<small>@(context.User.IsInRole("Admin") ? "Администратор" : "Пользователь")</small>
+						</div>
+					</div>
+
+					<div class="dropdown-divider"></div>
+					<button class="dropdown-item logout-item" @onclick="Logout">
+						<i class="fas fa-sign-out-alt"></i> Выйти
+					</button>
+				</div>
+			</div>
+		</Authorized>
+		<NotAuthorized>
+			<button class="login-btn" @onclick="Login">
+				<i class="fas fa-sign-in-alt"></i> Войти
+			</button>
+		</NotAuthorized>
+	</AuthorizeView>
+</div>
+
+<div class="excel-tools-container">
+
+	<header class="excel-header">
+		<h1>Excel Tools</h1>
+	</header>
+	
+	<div class="main-container">
+		<div class="form-section">
+
+			<!-- 1. Загрузка файла -->
+			<div class="section">
+				<h3>1. Выберите Excel файл</h3>
+				<label class="file-upload-button">
+					<InputFile OnChange="@OnInputFileChange" accept=".xlsx" class="file-input"/>
+					<span>Выбрать файл</span>
+				</label>
+				@if (_selectedFile != null)
+				{
+					<p class="file-selected-message">Выбран файл: @_selectedFile.Name</p>
+				}
+				else
+				{
+					<p class="file-not-selected-message">Файл не выбран</p>
+				}
+			</div>
+
+			<!-- 2. Выбор операции -->
+			<div class="section">
+				<h3>2. Выберите операцию</h3>
+				<select @bind="_selectedOperation" class="operation-select">
+					<option value="">-- Выберите операцию --</option>
+					<option value="Clean">Очистка данных</option>
+					<option value="RemoveDuplicates">Удаление дубликатов</option>
+					<option value="Merge">Объединение файлов</option>
+					<option value="Split">Разделение файла</option>
+					<option value="ColumnSplit">Разделение по столбцам</option>
+					<option value="Rotate">Транспонирование</option>
+					<option value="Comparison">Сравнение</option>
+				</select>
+			</div>
+
+			<!-- 3. Параметры операции (динамические) -->
+			<div class="section">
+				<h3>3. Параметры обработки</h3>
+
+				<div>
+					<label>Пропустить строк:</label>
+					<input type="number" @bind="skipRows"/>
+				</div>
+				<div>
+					<label>Номер листа:</label>
+					<input type="number" @bind="sheetNumber"/>
+				</div>
+
+				@switch (_selectedOperation)
+				{
+					case "RemoveDuplicates":
+						<div>
+							<label>Столбцы для проверки (через запятую):</label>
+							<input @bind="@columnsToCheck"/>
+						</div>
+						break;
+					case "ColumnSplit":
+						<div>
+							<label>Символ(ы) для разделения:</label>
+							<input @bind="@splitSymbols"/>
+						</div>
+						<div>
+							<label>Имя столбца:</label>
+							<input @bind="@columnName"/>
+						</div>
+						<div>
+							<label>Количество строк заголовка:</label>
+							<input type="number" @bind="@addHeaderRows"/>
+						</div>
+						break;
+					case "Merge":
+						<div>
+							<label>Режим объединения:</label>
+							<select @bind="@mergeMode">
+								<option value="Table">По таблицам</option>
+								<option value="Sheets">По листам</option>
+							</select>
+						</div>
+						break;
+					case "Split":
+						<div>
+							<label>Тип разделения:</label>
+							<select @bind="@splitMode">
+								<option value="SplitByRows">По строкам</option>
+								<option value="SplitByFiles">По файлам</option>
+							</select>
+						</div>
+						<div>
+							<label>Количество результатов:</label>
+							<input type="number" @bind="@resultsCount"/>
+						</div>
+						<div>
+							<label>Количество заголовков:</label>
+							<input type="number" @bind="@addHeaderRows"/>
+						</div>
+						break;
+					case "Comparison":
+						<div>
+							<label>ID строк для сопоставления (через запятую):</label>
+							<input @bind="@comparisonKeys"/>
+						</div>
+						<div>
+							<label>Заголовочные строки (через запятую):</label>
+							<input @bind="@comparisonHeaders"/>
+						</div>
+						break;
+				}
+			</div>
+
+			<!-- 4. Кнопка выполнения -->
+			<div class="section">
+				@if (_isLoading)
+				{
+					<div class="loading-text">Обработка файла...</div>
+				}
+				else
+				{
+					<button @onclick="ProcessFile"
+					        disabled="@(_selectedFile == null || string.IsNullOrEmpty(_selectedOperation))">
+						Обработать файл
+					</button>
+				}
+			</div>
+
+			<!-- 5. Результат -->
+			@if (!string.IsNullOrEmpty(_resultFileId.ToString()) && _resultFileId != Guid.Empty)
+			{
+				<div class="section result-section">
+					<h3>Результат готов!</h3>
+					<button @onclick="() => DownloadFile(_resultFileId)" class="btn btn-primary">
+						Скачать файл
+					</button>
+				</div>
+			}
+
+			@if (!string.IsNullOrEmpty(_errorMessage))
+			{
+				<div class="error-message">
+					@_errorMessage
+				</div>
+			}
+
+		</div>
+		<div class="description-panel">
+			<h3>Описание операции</h3>
+			<p>@GetOperationDescription()</p>
+		</div>
+	</div>
+</div>
+
+@code {
+	[Inject] private CustomAuthStateProvider AuthProvider { get; set; }
+	private IBrowserFile? _selectedFile;
+	private string? _selectedOperation;
+	private Guid _resultFileId;
+	private string? _errorMessage;
+	private bool _isLoading = false;
+	private bool isProfileOpen = false;
+    
+	private void ToggleProfile()
+	{
+		isProfileOpen = !isProfileOpen;
+	}
+
+	// Общие параметры
+	private int skipRows = 0;
+	private int sheetNumber = 1;
+
+	// RemoveDuplicates
+	private string columnsToCheck = "";
+
+	// ColumnSplit
+	private string splitSymbols = ",";
+	private string columnName = "A";
+	private int addHeaderRows = 1;
+
+	// Merge
+	private string mergeMode = "Table";
+
+	// Split
+	private string splitMode = "SplitByRows";
+	private int resultsCount = 3;
+
+	// Comparison
+	private string sourceFileId = "";
+    private string modifiedFileI = "";
+	private string comparisonKeys = "";
+	private string comparisonHeaders = "1";
+
+	protected override async Task OnInitializedAsync()
+	{
+		var authState = await AuthProvider.GetAuthenticationStateAsync();
+		if (!authState.User.Identity.IsAuthenticated)
+		{
+			Navigation.NavigateTo("/login");
+			return;
+		}
+
+		var token = await _localStorage.GetItemAsync<string>("authToken");
+		if (!string.IsNullOrEmpty(token))
+		{
+			Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+		}
+	}
+
+    private void OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        _selectedFile = e.GetMultipleFiles().FirstOrDefault();
+        _errorMessage = null;
+    }
+
+	private async Task ProcessFile()
+	{
+		try 
+		{
+			_isLoading = true;
+			_errorMessage = null;
+			_resultFileId = Guid.Empty;
+
+			var token = await _localStorage.GetItemAsync<string>("authToken");
+			using var content = new MultipartFormDataContent();
+			content.Add(new StreamContent(_selectedFile.OpenReadStream()), "Files", _selectedFile.Name);
+
+			Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+			var uploadResponse = await Http.PostAsync("api/file/upload", content);
+        
+			if (!uploadResponse.IsSuccessStatusCode)
+			{
+				_errorMessage = $"Ошибка загрузки: {uploadResponse.StatusCode}";
+				return;
+			}
+
+			var responseObj = await uploadResponse.Content.ReadFromJsonAsync<JsonElement>();
+			var fileId = responseObj[0].GetGuid(); 
+            
+
+            object requestData = _selectedOperation switch
+            {
+                "Clean" => new CleanerAPIOptions
+                    {
+                        FileId = fileId,
+                        SkipRows = skipRows,
+                        SheetNumber = sheetNumber
+                    },
+                "RemoveDuplicates" => new DuplicateRemoverAPIOptions
+                    {
+                        FileId = fileId,
+                        KeysForRowsComparison = columnsToCheck
+                            .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                            .Select(s => s.Trim())
+                            .ToArray(),
+                        SkipRows = skipRows,
+                        SheetNumber = sheetNumber
+                    },
+                "Merge" => new MergerAPIOptions
+                    {
+                        // MergeFilePaths = mergeFileIds, 
+                        MergeMode = mergeMode == "Table" ? MergerAPIOptions.MergeType.Table : MergerAPIOptions.MergeType.Sheets,
+                        SkipRows = skipRows,
+                        SheetNumber = sheetNumber
+                    },
+                "Split" => new SplitterAPIOptions
+                    {
+                        FileId = fileId,
+                        SplitMode = splitMode == "SplitByRows"
+                            ? SplitterAPIOptions.SplitType.SplitByRows
+                            : SplitterAPIOptions.SplitType.SplitByFiles,
+                        ResultsCount = resultsCount,
+                        AddHeaderRows = addHeaderRows,
+                        SkipRows = skipRows,
+                        SheetNumber = sheetNumber
+                    },
+	            "ColumnSplit" => new ColumnSplitterAPIOptions
+                    {
+                        FileId = fileId,
+                        SplitSymbols = splitSymbols,
+                        ColumnName = columnName,
+                        AddHeaderRows = addHeaderRows,
+                        SkipRows = skipRows,
+                        SheetNumber = sheetNumber
+                    },
+                "Rotate" => new RotaterAPIOptions
+                    {
+                        FileId = fileId,
+                        SkipRows = skipRows,
+                        SheetNumber = sheetNumber
+                    },
+                "Comparison" => new ComparisonAPIOptions
+                    {
+                        // SourceFileId = sourceFileId,     
+                        // ModifiedFileId = modifiedFileId,   
+                        Id = comparisonKeys
+                            .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                            .Select(s => s.Trim())
+                            .ToArray(),
+                        HeaderRows = comparisonHeaders
+                            .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                            .Select(s => int.TryParse(s.Trim(), out var n) ? n : 0)
+                            .ToArray(),
+                        SkipRows = skipRows,
+                        SheetNumber = sheetNumber
+                    },
+                _ => throw new InvalidOperationException("Неизвестная операция")
+            };
+
+			var apiResponse = await Http.PostAsJsonAsync($"api/excel/{_selectedOperation.ToLowerInvariant()}", requestData);
+
+			if (!apiResponse.IsSuccessStatusCode)
+			{
+				_errorMessage = $"Ошибка обработки: {apiResponse.StatusCode}";
+				if (apiResponse.StatusCode == HttpStatusCode.Unauthorized)
+				{
+					Navigation.NavigateTo("/login");
+				}
+				return;
+			}
+
+            _resultFileId = await apiResponse.Content.ReadFromJsonAsync<Guid>();
+		}
+		catch (Exception ex)
+		{
+			_errorMessage = $"Ошибка: {ex.Message}";
+		}
+		finally
+		{
+			_isLoading = false; 
+		}
+	}
+
+	private async Task DownloadFile(Guid fileId)
+	{
+        Navigation.NavigateTo($"https://localhost:5001/api/file/download/{fileId}", forceLoad: true);
+	}
+
+	private string GetOperationDescription()
+	{
+		return _selectedOperation switch
+		{
+			"Clean" => "Очистка файла от пустых строк.",
+			"RemoveDuplicates" => "Удаление дубликатов строк по указанным столбцам. Если столбцы не указаны, дубликатами будут считаться одинаковые строки",
+			"Merge" => "Объединение нескольких файлов в один. Важно, чтобы структура информации в файлах была однаковой.",
+			"Split" => "Разделение файла на несколько файлов. Разделение зависит от указанного типа разделения: по строкам - файл разделится по количеству указанных строк, по файлам - файл разделится на количество указанных файлов.",
+			"ColumnSplit" => "Разделение одного столбца на несколько по указанным символам.",
+			"Rotate" => "Транспонирование таблицы (поворот строк в столбцы).",
+			"Comparison" => "Сравнение двух версий файла с выделением изменений.",
+			_ => "Выберите операцию для получения описания."
+			};
+	}
+
+
+	private async Task Logout()
+	{
+		await AuthProvider.MarkUserAsLoggedOut();
+	}
+
+	private void Login()
+	{
+		Navigation.NavigateTo("/login");
+	}
+
+
+}

@@ -17,7 +17,7 @@ namespace ExcelTools.Comparison
         public string[]? Id { get; set; }
 
         /// <summary>
-        /// Количество строк, которые требуется использовать как заголовки 
+        /// Номера, которые требуется использовать как заголовки 
         /// </summary>
         public int[] HeaderRows { get; set; }
     }
