@@ -1,15 +1,14 @@
-﻿using API.Models;
-using APILib.Contracts;
+﻿using APILib.Contracts;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using static APILib.Repository.Files;
+using static APILib.Repository.File;
 
 namespace APILib.Repository
 {
     public sealed class RepositoryContext: IdentityDbContext<ApplicationUser>, IRepositoryContext
     {
-        public DbSet<Files> Files => Set<Files>();
+        public DbSet<File> Files => Set<File>();
 
 public override DbSet<ApplicationUser> Users => Set<ApplicationUser>();
 
@@ -56,16 +55,16 @@ public DbSet<ProcessedFileHistory> ProcessedFileHistory{ get; set; }
         /// <param name="fileName"></param>
         /// <param name="operation"></param>
         /// <returns></returns>
-        public async Task Create(Stream stream, Guid fileId, string fileName, string operation)
+        public async Task Create(Stream stream, Guid fileId, string fileName, int operation)
         {
-            var fileInfo = new Files
+            var fileInfo = new File
                 {
                     Id = fileId,
                     FileName = fileName,
                     SaveDate = DateTime.UtcNow,
                     State = FileState.Active,
                     SizeBytes = stream.Length,
-                    Operation = operation,
+                    OperationId = operation,
 			};
 
                 Files.Add(fileInfo);

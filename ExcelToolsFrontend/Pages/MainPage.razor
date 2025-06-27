@@ -51,18 +51,28 @@
 
 			<!-- 1. Загрузка файла -->
 			<div class="section">
-				<h3>1. Выберите Excel файл</h3>
+				<h3>1. Выберите Excel файл(ы)</h3>
 				<label class="file-upload-button">
-					<InputFile OnChange="@OnInputFileChange" accept=".xlsx" class="file-input"/>
-					<span>Выбрать файл</span>
+					<InputFile OnChange="@OnInputFileChange" accept=".xlsx" multiple class="file-input"/>
+					<span>Выбрать файлы</span>
 				</label>
-				@if (_selectedFile != null)
+    
+				@if (_selectedFiles.Count > 0)
 				{
-					<p class="file-selected-message">Выбран файл: @_selectedFile.Name</p>
+					<div class="file-list">
+						<p>Выбрано файлов: @_selectedFiles.Count</p>
+						<button @onclick="ClearFiles" class="clear-btn">Очистить</button>
+						<ul>
+							@foreach (var file in _selectedFiles)
+							{
+								<li>@file.Name - @(Math.Round(file.Size / 1024.0, 2)) KB</li>
+							}
+						</ul>
+					</div>
 				}
 				else
 				{
-					<p class="file-not-selected-message">Файл не выбран</p>
+					<p class="file-not-selected-message">Файлы не выбраны</p>
 				}
 			</div>
 
@@ -77,7 +87,7 @@
 					<option value="Split">Разделение файла</option>
 					<option value="ColumnSplit">Разделение по столбцам</option>
 					<option value="Rotate">Транспонирование</option>
-					<option value="Comparison">Сравнение</option>
+					@* <option value="Comparison">Сравнение</option> *@
 				</select>
 			</div>
 
@@ -154,7 +164,8 @@
 						break;
 				}
 			</div>
-
+			
+			
 			<!-- 4. Кнопка выполнения -->
 			<div class="section">
 				@if (_isLoading)
@@ -164,7 +175,7 @@
 				else
 				{
 					<button @onclick="ProcessFile"
-					        disabled="@(_selectedFile == null || string.IsNullOrEmpty(_selectedOperation))">
+					        disabled="@(_selectedFiles.Count < 1 || string.IsNullOrEmpty(_selectedOperation))">
 						Обработать файл
 					</button>
 				}
@@ -198,7 +209,7 @@
 
 @code {
 	[Inject] private CustomAuthStateProvider AuthProvider { get; set; }
-	private IBrowserFile? _selectedFile;
+	private List<IBrowserFile> _selectedFiles = new List<IBrowserFile>();
 	private string? _selectedOperation;
 	private Guid _resultFileId;
 	private string? _errorMessage;
@@ -251,23 +262,46 @@
 		}
 	}
 
-    private void OnInputFileChange(InputFileChangeEventArgs e)
-    {
-        _selectedFile = e.GetMultipleFiles().FirstOrDefault();
-        _errorMessage = null;
-    }
+	private void OnInputFileChange(InputFileChangeEventArgs e)
+	{
+		_selectedFiles.AddRange(e.GetMultipleFiles());
+		_errorMessage = null;
+	}
 
 	private async Task ProcessFile()
 	{
 		try 
 		{
+			switch (_selectedOperation)
+			{
+				case "Merge":
+				case "Comparison":
+					if (_selectedFiles.Count < 2)
+					{
+						_errorMessage = "Для этой операции необходимо минимум 2 файла";
+						return;
+					}
+					break;
+				default:
+					if (_selectedFiles.Count == 0)
+					{
+						_errorMessage = "Выберите хотя бы один файл";
+						return;
+					}
+					break;
+			}
+
 			_isLoading = true;
 			_errorMessage = null;
 			_resultFileId = Guid.Empty;
 
 			var token = await _localStorage.GetItemAsync<string>("authToken");
+	
 			using var content = new MultipartFormDataContent();
-			content.Add(new StreamContent(_selectedFile.OpenReadStream()), "Files", _selectedFile.Name);
+			foreach (var file in _selectedFiles)
+			{
+				content.Add(new StreamContent(file.OpenReadStream()), "Files", file.Name);
+			}
 
 			Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 			var uploadResponse = await Http.PostAsync("api/file/upload", content);
@@ -279,20 +313,25 @@
 			}
 
 			var responseObj = await uploadResponse.Content.ReadFromJsonAsync<JsonElement>();
-			var fileId = responseObj[0].GetGuid(); 
-            
 
-            object requestData = _selectedOperation switch
+			var fileIds = new Guid[responseObj.GetArrayLength()];
+
+			for (var i = 0; i < responseObj.GetArrayLength(); i++)
+			{
+				fileIds[i] = responseObj[i].GetGuid();
+			}
+
+        object requestData = _selectedOperation switch
             {
-                "Clean" => new CleanerAPIOptions
+				"Clean" => new CleanerAPIOptions
                     {
-                        FileId = fileId,
+                        FileId = fileIds[0],
                         SkipRows = skipRows,
                         SheetNumber = sheetNumber
                     },
-                "RemoveDuplicates" => new DuplicateRemoverAPIOptions
+				"RemoveDuplicates" => new DuplicateRemoverAPIOptions
                     {
-                        FileId = fileId,
+                        FileId = fileIds[0],
                         KeysForRowsComparison = columnsToCheck
                             .Split(',', StringSplitOptions.RemoveEmptyEntries)
                             .Select(s => s.Trim())
@@ -302,14 +341,14 @@
                     },
                 "Merge" => new MergerAPIOptions
                     {
-                        // MergeFilePaths = mergeFileIds, 
+                        MergeFilePaths = fileIds, 
                         MergeMode = mergeMode == "Table" ? MergerAPIOptions.MergeType.Table : MergerAPIOptions.MergeType.Sheets,
                         SkipRows = skipRows,
                         SheetNumber = sheetNumber
                     },
                 "Split" => new SplitterAPIOptions
                     {
-                        FileId = fileId,
+                        FileId = fileIds[0],
                         SplitMode = splitMode == "SplitByRows"
                             ? SplitterAPIOptions.SplitType.SplitByRows
                             : SplitterAPIOptions.SplitType.SplitByFiles,
@@ -320,7 +359,7 @@
                     },
 	            "ColumnSplit" => new ColumnSplitterAPIOptions
                     {
-                        FileId = fileId,
+                        FileId = fileIds[0],
                         SplitSymbols = splitSymbols,
                         ColumnName = columnName,
                         AddHeaderRows = addHeaderRows,
@@ -329,7 +368,7 @@
                     },
                 "Rotate" => new RotaterAPIOptions
                     {
-                        FileId = fileId,
+                        FileId = fileIds[0],
                         SkipRows = skipRows,
                         SheetNumber = sheetNumber
                     },
@@ -394,8 +433,7 @@
 			_ => "Выберите операцию для получения описания."
 			};
 	}
-
-
+	
 	private async Task Logout()
 	{
 		await AuthProvider.MarkUserAsLoggedOut();
@@ -406,5 +444,8 @@
 		Navigation.NavigateTo("/login");
 	}
 
-
+	private void ClearFiles()
+	{
+		_selectedFiles.Clear();
+	}
 }

@@ -8,43 +8,18 @@
 @inject ILocalStorageService _localStorage
 @inject CustomAuthStateProvider AuthProvider
 
-<PageTitle>История операций</PageTitle>
-
-<MudContainer MaxWidth="MaxWidth.Large" Class="mt-10">
-    <MudText Typo="Typo.h4" Class="mb-6">История операций</MudText>
-
-    @if (isLoading)
-    {
-        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Class="mx-auto" />
-    }
-    else if (processedFileHistory == null || !processedFileHistory.Any())
-    {
-        <MudAlert Severity="Severity.Info">История операций пуста</MudAlert>
-    }
-    else
-    {
-        <MudPaper Elevation="3" Class="pa-4">
-            <MudTable Items="@processedFileHistory" Hover="true" Breakpoint="Breakpoint.None">
-                <HeaderContent>
-                    <MudTh>Дата</MudTh>
-                    <MudTh>Операция</MudTh>
-                    <MudTh>Файл</MudTh>
-                    <MudTh>Статус</MudTh>
-                </HeaderContent>
-                <RowTemplate>
-                    <MudTd DataLabel="Дата">@context.ProcessedAt.ToString("dd.MM.yyyy HH:mm")</MudTd>
-                    <MudTd DataLabel="Операция">@context.Operation</MudTd>
-                    <MudTd DataLabel="Файл">@context.FileId</MudTd>
-				</RowTemplate>
-            </MudTable>
-        </MudPaper>
-        
-        @if (totalPages > 1)
-        {
-            <MudPagination Count="@totalPages" Selected="@currentPage" SelectedChanged="OnPageChanged" BoundaryCount="2" Class="mt-4" />
-        }
-    }
-</MudContainer>
+<div class="cards-container">
+    @foreach (var item in processedFileHistory.OrderByDescending(x => x.ProcessedAt))
+	{
+		<div class="operation-card">
+			<div class="card-header">
+				<span class="date">@item.ProcessedAt.ToString("dd.MM.yyyy HH:mm")</span>
+				<span class="file-id">ID: @item.FileId</span>
+			</div>
+			<div class="operation-type">@item.Operation</div>
+		</div>
+	}
+</div>
 
 @code {
     private List<ProcessedFileHistory> processedFileHistory = new();
@@ -97,16 +72,4 @@
         }
     }
 
-    private async Task OnPageChanged(int page)
-    {
-        currentPage = page;
-        await LoadHistory();
-    }
-
-	// Модель для пагинации
-    public class PagedResponse<T>
-    {
-        public List<T> Items { get; set; } = new();
-        public int TotalPages { get; set; }
-    }
 }

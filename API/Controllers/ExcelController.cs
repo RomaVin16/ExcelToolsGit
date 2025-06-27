@@ -12,8 +12,6 @@ namespace API.Controllers
     {
         private readonly IFileService _fileService;
         private readonly IRepositoryContext _repositoryContext;
-		private string? _userId;
-
 
 		public ExcelController(IFileService fileService, IRepositoryContext repositoryContext)
         {
@@ -25,61 +23,70 @@ namespace API.Controllers
         [HttpPost("clean")]
         public async Task<IActionResult> Clean([FromBody] CleanerAPIOptions options)
         {
-	        var _userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
+	        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 			var resultFileId = _fileService.Clean(options);
 
-			await _repositoryContext.CreateHistory(_userId, resultFileId, "Clean");
+			await _repositoryContext.CreateHistory(userId, resultFileId, "Clean");
 
 			return Ok(resultFileId);
         }
 
-        [HttpPost("duplicateRemove")]
+        [Authorize]
+        [HttpPost("removeduplicates")]
         public async Task<IActionResult> DuplicateRemove([FromBody] DuplicateRemoverAPIOptions options)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var resultFileId = _fileService.DuplicateRemove(options);
 
-            await _repositoryContext.CreateHistory(_userId, resultFileId, "DuplicateRemove");
+            await _repositoryContext.CreateHistory(userId, resultFileId, "DuplicateRemove");
 
 			return Ok(resultFileId);
         }
 
+        [Authorize]
         [HttpPost("merge")]
         public async Task<IActionResult> Merge([FromBody] MergerAPIOptions options)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var resultFileId = _fileService.Merge(options);
 
-			await _repositoryContext.CreateHistory(_userId, resultFileId, "Merge");
+			await _repositoryContext.CreateHistory(userId, resultFileId, "Merge");
 
 			return Ok(resultFileId);
         }
 
+        [Authorize]
         [HttpPost("split")]
         public async Task<IActionResult> Split([FromBody] SplitterAPIOptions options)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var resultFileId = _fileService.Split(options);
 
-            await _repositoryContext.CreateHistory(_userId, resultFileId, "Split");
+            await _repositoryContext.CreateHistory(userId, resultFileId, "Split");
 
 			return Ok(resultFileId);
         }
 
-        [HttpPost("columnSplit")]
+        [Authorize]
+        [HttpPost("columnsplit")]
         public async Task<IActionResult> SplitColumn([FromBody] ColumnSplitterAPIOptions options)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var resultFileId = _fileService.SplitColumn(options);
 
-            await _repositoryContext.CreateHistory(_userId, resultFileId, "SplitColumn");
+            await _repositoryContext.CreateHistory(userId, resultFileId, "SplitColumn");
 
 			return Ok(resultFileId);
         }
 
+        [Authorize]
         [HttpPost("rotate")]
         public async Task<IActionResult> Rotate([FromBody] RotaterAPIOptions options)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var resultFileId = _fileService.Rotate(options);
 
-            await _repositoryContext.CreateHistory(_userId, resultFileId, "Rotate");
+            await _repositoryContext.CreateHistory(userId, resultFileId, "Rotate");
 
 			return Ok(resultFileId);
         }

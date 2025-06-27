@@ -36,7 +36,7 @@ namespace API.Controllers
             try
             {
                 await _authService.SaveOtpCode(phoneNumber, code);
-                await _smsService.SendAsync(phoneNumber, $"Ваш код: {code}");
+                //await _smsService.SendAsync(phoneNumber, $"Ваш код: {code}");
             }
             catch (Exception ex)
             {

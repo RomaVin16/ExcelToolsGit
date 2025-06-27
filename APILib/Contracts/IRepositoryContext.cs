@@ -6,7 +6,7 @@ namespace APILib.Contracts
 {
     public interface IRepositoryContext
     {
-        Task Create(Stream stream, Guid fileId, string fileName, string operation);
+        Task Create(Stream stream, Guid fileId, string fileName, int operation);
         string GetFileName(Guid fileId);
 
 
