@@ -28,7 +28,7 @@ namespace APILib
 
             await stream.CopyToAsync(fileStream);
 
-            await fileRepository.Create(stream, fileId, fileName, "Upload");
+            await fileRepository.Create(stream, fileId, fileName, (int)FileOperations.Upload);
 
             return fileId;
         }

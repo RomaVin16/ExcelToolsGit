@@ -213,7 +213,7 @@ button:disabled {
 /* Стили для кнопки выбора файла */
 .file-upload-button {
     background: center;
-    width: 150px; /* Фиксированная ширина */
+    width: 170px !important;
     display: inline-block;
     padding: 10px 20px;
     background-color: #f0f7eb;
@@ -611,3 +611,42 @@ button:disabled {
     .login-btn i {
         margin-right: 8px;
     }
+
+.cards-container {
+    display: grid;
+    gap: 15px;
+    padding: 20px;
+}
+
+.operation-card {
+    background: white;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+}
+
+    .operation-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.date {
+    color: #666;
+}
+
+.file-id {
+    color: #258cfb;
+}
+
+.operation-type {
+    font-weight: bold;
+    font-size: 16px;
+}

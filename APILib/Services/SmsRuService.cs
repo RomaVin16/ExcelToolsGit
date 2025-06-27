@@ -20,7 +20,7 @@ namespace APILib.Services
 
         public async Task SendAsync(string phoneNumber, string message, bool isTest = true)
         {
-            if (isTest = true)
+            if (isTest == true)
             {
                 Console.WriteLine($"[TEST MODE] SMS to {phoneNumber}: {message}");
                 return;
@@ -45,7 +45,6 @@ namespace APILib.Services
                 };
 
             var content = new FormUrlEncodedContent(parameters);
-
 
             const string email = "rvvinokurov@edu.hse.ru";  
             const string apiKey = "5E-S0UN4L4-SzmDywP-AIQ-ji1Ckf2_W";

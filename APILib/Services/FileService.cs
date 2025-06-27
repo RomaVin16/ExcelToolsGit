@@ -8,6 +8,7 @@ using APILib.APIOptions;
 using FileResult = API.Models.FileResult;
 using APILib.Contracts;
 using ExcelTools.Rotate;
+using APILib.Repository;
 
 namespace APILib.Services
 {
@@ -72,7 +73,7 @@ namespace APILib.Services
 
             var filePath = GetFolder(fileId);
 
-            var stream = File.OpenRead(Path.Combine(filePath, fileName));
+            var stream = System.IO.File.OpenRead(Path.Combine(filePath, fileName));
 
             result.FileName = fileName;
             result.FileStream = stream;
@@ -106,9 +107,9 @@ namespace APILib.Services
             });
 
             var filePath = Path.Combine(resultFolderId, fileResult.FileName);
-            var stream = File.OpenRead(filePath);
+            var stream = System.IO.File.OpenRead(filePath);
 
-            _repositoryContext.Create(stream, resultFileId, fileResult.FileName, "Clean");
+            _repositoryContext.Create(stream, resultFileId, fileResult.FileName, (int)FileOperations.Clean);
 
 			return resultFileId;
         }
@@ -116,9 +117,10 @@ namespace APILib.Services
         public Guid DuplicateRemove(DuplicateRemoverAPIOptions options)
         {
             var duplicateRemover = new DuplicateRemover();
-            var fileResult = new FileResult();
-
-            fileResult.FileName = _repositoryContext.GetFileName(options.FileId);
+            var fileResult = new FileResult
+            {
+                FileName = _repositoryContext.GetFileName(options.FileId)
+            };
 
             var (resultFileId, resultFolderId) = CreateFolder();
 
@@ -132,9 +134,9 @@ namespace APILib.Services
             });
 
             var filePath = Path.Combine(resultFolderId, fileResult.FileName);
-            var stream = File.OpenRead(filePath);
+            var stream = System.IO.File.OpenRead(filePath);
 
-            _repositoryContext.Create(stream, resultFileId, fileResult.FileName, "DuplicateRemove");
+            _repositoryContext.Create(stream, resultFileId, fileResult.FileName, (int)FileOperations.DuplicateRemove);
 
             return resultFileId;
         }
@@ -166,9 +168,9 @@ namespace APILib.Services
             //var fileResult = Get(resultFileId);
 
             var filePath = Path.Combine(resultFolderId, "merge_result.xlsx");
-            var stream = File.OpenRead(filePath);
+            var stream = System.IO.File.OpenRead(filePath);
 
-            _repositoryContext.Create(stream, resultFileId, "merge_result.xlsx", "Merge");
+            _repositoryContext.Create(stream, resultFileId, "merge_result.xlsx", (int)FileOperations.Merge);
 
             return resultFileId;
         }
@@ -210,9 +212,9 @@ namespace APILib.Services
 
                 _archiveService.ArchiveFile(tempZipPath, tempFolderPath);
 
-                var stream = File.OpenRead(tempZipPath);
+                var stream = System.IO.File.OpenRead(tempZipPath);
 
-                _repositoryContext.Create(stream, resultZipId, $"{baseFileName}_results.zip", "Split");
+                _repositoryContext.Create(stream, resultZipId, $"{baseFileName}_results.zip", (int)FileOperations.Split);
 
                 Directory.Delete(tempFolderPath, true);
             }
@@ -247,9 +249,9 @@ namespace APILib.Services
 
             var filePath = Path.Combine(resultFolderId, fileResult.FileName);
 
-            var stream = File.OpenRead(filePath);
+            var stream = System.IO.File.OpenRead(filePath);
 
-            _repositoryContext.Create(stream, resultFileId, fileResult.FileName, "SplitColumn");
+            _repositoryContext.Create(stream, resultFileId, fileResult.FileName, (int)FileOperations.SplitColumn);
 
             return resultFileId;
         }
@@ -273,9 +275,9 @@ namespace APILib.Services
             });
 
             var filePath = Path.Combine(resultFolderId, fileResult.FileName);
-            var stream = File.OpenRead(filePath);
+            var stream = System.IO.File.OpenRead(filePath);
 
-            _repositoryContext.Create(stream, resultFileId, fileResult.FileName, "Rotate");
+            _repositoryContext.Create(stream, resultFileId, fileResult.FileName, (int)FileOperations.Rotate);
 
             return resultFileId;
         }
